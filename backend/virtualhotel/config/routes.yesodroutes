@@ -1,0 +1,42 @@
+-- By default this file is used by `parseRoutesFile` in Foundation.hs
+-- Syntax for this file here: https://www.yesodweb.com/book/routing-and-handlers
+
+/static StaticR Static appStatic
+
+/favicon.ico FaviconR GET
+/robots.txt RobotsR GET
+
+/ HomeR GET POST
+
+/comments CommentR POST
+
+-- Login Routes
+/login LoginR GET 
+/login LoginR POST 
+
+-- Signup Routes
+/signup SignupR POST
+
+-- User Routes
+/user UserR GET 
+/user UserR POST 
+/user UserR PATCH 
+/user UserR DELETE 
+
+-- Room Routes
+/room RoomR GET 
+/room RoomR POST 
+/room RoomR PATCH 
+/room RoomR DELETE 
+
+-- Hotel Routes
+/hotel HotelR GET 
+/hotel HotelR POST 
+/hotel HotelR PATCH 
+/hotel HotelR DELETE 
+
+-- Reservation Routes
+/reservation ReservationR GET 
+/reservation ReservationR POST 
+/reservation ReservationR PATCH 
+/reservation ReservationR DELETE 
