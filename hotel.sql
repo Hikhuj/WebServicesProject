@@ -76,3 +76,11 @@ CREATE TABLE [dbo].[Reservacion]
     -- Specify more columns here
 );
 GO
+
+/*
+
+For User Read options
+
+SELECT USU_CODIGO, USU_IDENTIFICACION, USU_NOMBRE, USU_PASSWORD, USU_EMAIL, USU_ESTADO, USU_FEC_NAC, USU_TELEFONO
+FROM   USUARIO
+ */
