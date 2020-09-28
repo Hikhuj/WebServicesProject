@@ -11,32 +11,23 @@
 /comments CommentR POST
 
 -- Login Routes
-/login LoginR GET 
-/login LoginR POST 
+/login LoginR GET POST 
 
 -- Signup Routes
 /signup SignupR POST
 
 -- User Routes
-/user UserR GET 
-/user UserR POST 
-/user UserR PATCH 
-/user UserR DELETE 
+/user UserR GET POST PATCH getUsersR postUserR
+/user/#Int UserR GET POST PATCH DELETE getUserR patchUserR deleteUserR
 
 -- Room Routes
-/room RoomR GET 
-/room RoomR POST 
-/room RoomR PATCH 
-/room RoomR DELETE 
+/room RoomR GET POST PATCH getRoomsR postRoomR
+/room/#Int RoomR GET POST PATCH DELETE getRoomR patchRoomR deleteRoomR
 
 -- Hotel Routes
-/hotel HotelR GET 
-/hotel HotelR POST 
-/hotel HotelR PATCH 
-/hotel HotelR DELETE 
+/hotel HotelR GET POST PATCH getHotelsR postHotelR
+/hotel/#Int HotelR GET POST PATCH DELETE getHotelR patchHotelR deleteHotelR
 
 -- Reservation Routes
-/reservation ReservationR GET 
-/reservation ReservationR POST 
-/reservation ReservationR PATCH 
-/reservation ReservationR DELETE 
+/reservation ReservationR GET POST PATCH getReservationsR postReservationR
+/reservation/#Int ReservationR GET POST PATCH DELETE getReservationR patchReservationR deleteReservationR
