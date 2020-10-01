@@ -1,0 +1,16 @@
+cradle:
+  stack:
+    - path: "./src"
+      component: "virtualhotel:lib"
+
+    - path: "./app/main.hs"
+      component: "virtualhotel:exe:virtualhotel"
+
+    - path: "./app/DevelMain.hs"
+      component: "virtualhotel:exe:virtualhotel"
+
+    - path: "./app/Paths_virtualhotel.hs"
+      component: "virtualhotel:exe:virtualhotel"
+
+    - path: "./test"
+      component: "virtualhotel:test:virtualhotel-test"
