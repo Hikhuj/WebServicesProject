@@ -31,3 +31,4 @@
 -- Reservation Routes
 /reservation ReservationR GET POST PATCH getReservationsR postReservationR
 /reservation/#Int ReservationR GET POST PATCH DELETE getReservationR patchReservationR deleteReservationR
+/login LoginR GET POST
