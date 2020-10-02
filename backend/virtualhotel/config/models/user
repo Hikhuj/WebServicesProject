@@ -1,0 +1,9 @@
+Usuario
+ USU_CODIGO Int
+ USU_NOMBRE Text
+ USU_IDENTIFICACION Text
+ USU_PASSWORD Text
+ USU_EMAIL Text
+ USU_ESTADO Char
+ USU_FEC_NAC UTCTime default=now()
+ Primary USU_CODIGO

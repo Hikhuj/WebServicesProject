@@ -1,0 +1,6 @@
+Reservacion
+ RES_CODIGO Int
+ USU_CODIGO Int
+ HAB_CODIGO Int
+ RES_FECHA_INGRESO UTCTime default=now()
+ RES_FECHA_SALIDA UTCTime default=now()
