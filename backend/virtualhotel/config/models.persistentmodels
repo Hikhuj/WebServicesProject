@@ -1,0 +1,39 @@
+-- By default this file is used by `persistFileWith` in Model.hs (which is imported by Foundation.hs)
+-- Syntax for this file here: https://github.com/yesodweb/persistent/blob/master/docs/Persistent-entity-syntax.md
+
+
+Hotel json -- Adding "json" causes ToJSON and FromJSON instances to be derived.
+ hot_nombre Text
+ hot_telefono Text
+ hot_email Text
+ hot_direccion Text
+ hot_categoria Text
+ deriving Show
+
+Usuario json -- Adding "json" causes ToJSON and FromJSON instances to be derived.
+ usu_nombre Text
+ usu_identificacion Text
+ usu_password Text
+ usu_email Text
+ usu_estado Text
+ usu_fec_nac UTCTime default=now()
+ deriving Typeable
+
+Reservacion json -- Adding "json" causes ToJSON and FromJSON instances to be derived.
+ fk_usu_codigo UsuarioId
+ fk_hab_codigo HabitacionId
+ res_fecha_ingreso UTCTime default=now()
+ res_fecha_salida UTCTime default=now()
+ deriving Show
+ 
+Habitacion json -- Adding "json" causes ToJSON and FromJSON instances to be derived.
+ fk_hot_codigo HotelId
+ hab_numero Int
+ hab_capacidad Int
+ hab_tipo Text
+ hab_descripcion Text
+ hab_estado Text
+ hab_precio Rational
+ deriving Eq
+ deriving Show
+
