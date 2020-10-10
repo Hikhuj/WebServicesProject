@@ -1,9 +1,22 @@
+{-# LANGUAGE OverloadedStrings  #-}
+{-# LANGUAGE FlexibleInstances #-}
 module Handler.User where
 
+import Database.Persist.Postgresql
 import Import
 
-getUserR :: Int -> Handler Value
-getUserR user = error "Not yet implemented: getUserR"
+getUserR :: UsuarioId -> Handler Value
+getUserR userId = do
+ user <- runDB $ get404 userId
+ return $ object ["user" .= user]
 
-patchUserR :: Int -> Handler Value
-patchUserR user = error "Not yet implemented: patchUserR"
+patchUserR :: UsuarioId -> Handler Value
+patchUserR = error "NO IMPLEMENTADO"
+
+putUserR :: UsuarioId -> Handler Value
+putUserR userId = do
+ _ <- runDB $ get404 userId
+ newUser <- requireCheckJsonBody :: Handler Usuario
+ runDB $ replace userId newUser 
+ return $ object ["user" .= newUser]
+

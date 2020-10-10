@@ -1,9 +1,18 @@
+{-# LANGUAGE OverloadedStrings  #-}
+{-# LANGUAGE FlexibleInstances #-}
 module Handler.Reservations where
 
 import Import
+import Database.Persist.Postgresql
 
-getReservationsR :: Handler Html
-getReservationsR = error "Not yet implemented: getReservationsR"
+getReservationsR :: Handler Value
+getReservationsR = do
+ reservations <- runDB $ selectList [] [Asc ReservacionId]
+ sendStatusJSON ok200 (object ["reservations" .= reservations])
 
-postReservationsR :: Handler Html
-postReservationsR = error "Not yet implemented: postReservationsR"
+postReservationsR :: Handler Value
+postReservationsR = do
+ newReservation <- requireCheckJsonBody :: Handler Reservacion
+ runDB $ insert newReservation
+ sendStatusJSON created201 (object ["New Reservation" .= newReservation])
+
