@@ -15,8 +15,9 @@ Usuario json -- Adding "json" causes ToJSON and FromJSON instances to be derived
  usu_identificacion Text
  usu_password Text
  usu_email Text
- usu_estado Text
+ usu_estado Text default='A'
  usu_fec_nac UTCTime default=now()
+ UniqueUsu_email usu_email sql=UniqueUsuEmail
  deriving Typeable
 
 Reservacion json -- Adding "json" causes ToJSON and FromJSON instances to be derived.

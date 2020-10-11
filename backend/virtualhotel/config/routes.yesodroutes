@@ -13,11 +13,14 @@
 
 /profile ProfileR GET
 
-/api/v1/users UsersR GET POST 
+/api/v1/users UsersR GET 
 /api/v1/hotels HotelsR GET POST
 /api/v1/reservations ReservationsR GET POST
 /api/v1/rooms RoomsR GET POST
-/api/v1/users/#Int UserR GET PATCH
-/api/v1/reservations/#Int ReservationR GET PATCH
-/api/v1/hotel/#Int HotelR GET PATCH
-/api/v1/rooms/#Int RoomR GET PATCH
+/api/v1/users/#UsuarioId UserR GET PUT PATCH
+/api/v1/reservations/#ReservacionId ReservationR GET PUT PATCH
+/api/v1/hotels/#HotelId HotelR GET PUT PATCH
+/api/v1/rooms/#HabitacionId RoomR GET PUT PATCH
+/api/v1/auth/signin UserLoginR POST
+/api/v1/auth/signup UserRegisterR POST
+/api/v1/auth/signout UserLogoutR GET

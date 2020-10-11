@@ -11,9 +11,12 @@
 module Foundation where
 
 import Import.NoFoundation
+import qualified Auth.JWT             as JWT
+import           Data.Aeson           (Result (Success), fromJSON)
 import Database.Persist.Sql (ConnectionPool, runSqlPool)
 import Text.Hamlet          (hamletFile)
 import Text.Jasmine         (minifym)
+import qualified Yesod.Auth.Message   as AuthMsg
 import Control.Monad.Logger (LogSource)
 
 -- Used only when in "auth-dummy-login" setting is enabled.
@@ -97,104 +100,29 @@ instance Yesod App where
     yesodMiddleware :: ToTypedContent res => Handler res -> Handler res
     yesodMiddleware = defaultYesodMiddleware
 
-    defaultLayout :: Widget -> Handler Html
-    defaultLayout widget = do
-        master <- getYesod
-        mmsg <- getMessage
-
-        muser <- maybeAuthPair
-        mcurrentRoute <- getCurrentRoute
-
-        -- Get the breadcrumbs, as defined in the YesodBreadcrumbs instance.
-        (title, parents) <- breadcrumbs
-
-        -- Define the menu items of the header.
-        let menuItems =
-                [ NavbarLeft $ MenuItem
-                    { menuItemLabel = "Home"
-                    , menuItemRoute = HomeR
-                    , menuItemAccessCallback = True
-                    }
-                {- , NavbarLeft $ MenuItem
-                 -     { menuItemLabel = "Profile"
-                 -     , menuItemRoute = ProfileR
-                 -     , menuItemAccessCallback = isJust muser
-                 -     } -}
-                , NavbarRight $ MenuItem
-                    { menuItemLabel = "Login"
-                    , menuItemRoute = AuthR LoginR
-                    , menuItemAccessCallback = isNothing muser
-                    }
-                , NavbarRight $ MenuItem
-                    { menuItemLabel = "Logout"
-                    , menuItemRoute = AuthR LogoutR
-                    , menuItemAccessCallback = isJust muser
-                    }
-                ]
-
-        let navbarLeftMenuItems = [x | NavbarLeft x <- menuItems]
-        let navbarRightMenuItems = [x | NavbarRight x <- menuItems]
-
-        let navbarLeftFilteredMenuItems = [x | x <- navbarLeftMenuItems, menuItemAccessCallback x]
-        let navbarRightFilteredMenuItems = [x | x <- navbarRightMenuItems, menuItemAccessCallback x]
-
-        -- We break up the default layout into two components:
-        -- default-layout is the contents of the body tag, and
-        -- default-layout-wrapper is the entire page. Since the final
-        -- value passed to hamletToRepHtml cannot be a widget, this allows
-        -- you to use normal widget features in default-layout.
-
-        pc <- widgetToPageContent $ do
-            addStylesheet $ StaticR css_bootstrap_css
-            $(widgetFile "default-layout")
-        withUrlRenderer $(hamletFile "templates/default-layout-wrapper.hamlet")
-
-    -- The page to be redirected to when authentication is required.
-    authRoute
-        :: App
-        -> Maybe (Route App)
-    authRoute _ = Just $ AuthR LoginR
-
-    isAuthorized
-        :: Route App  -- ^ The route the user is visiting.
-        -> Bool       -- ^ Whether or not this is a "write" request.
-        -> Handler AuthResult
-    -- Routes not requiring authentication.
-    isAuthorized (AuthR _) _ = return Authorized
-    isAuthorized CommentR _ = return Authorized
-    isAuthorized HomeR _ = return Authorized
-    isAuthorized FaviconR _ = return Authorized
-    isAuthorized RobotsR _ = return Authorized
-    isAuthorized (StaticR _) _ = return Authorized
-
+    -- Routes requiring authentication
+    isAuthorized UsersR _            = isAuthenticated
+    isAuthorized UsersR _            = isAuthenticated
+    isAuthorized HotelsR _           = isAuthenticated
+    isAuthorized ReservationsR _ = isAuthenticated
+    isAuthorized RoomsR  _   = isAuthenticated
+    isAuthorized (UserR _) _            = isAuthenticated
+    isAuthorized (HotelR _) _           = isAuthenticated
+    isAuthorized (RoomR _) _           = isAuthenticated
+    isAuthorized (ReservationR _) _             = isAuthenticated
+    -- Temporarily set all routes to not require authentication
+    {- isAuthorized _ _ = return Authorized -}
+    isAuthorized UserRegisterR _ = return Authorized
+    isAuthorized UserLoginR _ = return Authorized
+    isAuthorized UserLogoutR _ = return Authorized
     -- the profile route requires that the user is authenticated, so we
     -- delegate to that function
     {- isAuthorized ProfileR _ = isAuthenticated -}
-    isAuthorized _ _ = return Authorized
 
     -- This function creates static content files in the static folder
     -- and names them based on a hash of their content. This allows
     -- expiration dates to be set far in the future without worry of
     -- users receiving stale content.
-    addStaticContent
-        :: Text  -- ^ The file extension
-        -> Text -- ^ The MIME content type
-        -> LByteString -- ^ The contents of the file
-        -> Handler (Maybe (Either Text (Route App, [(Text, Text)])))
-    addStaticContent ext mime content = do
-        master <- getYesod
-        let staticDir = appStaticDir $ appSettings master
-        addStaticContentExternal
-            minifym
-            genFileName
-            staticDir
-            (StaticR . flip StaticRoute [])
-            ext
-            mime
-            content
-      where
-        -- Generate a unique filename based on the content itself
-        genFileName lbs = "autogen-" ++ base64md5 lbs
 
     -- What messages should be logged. The following includes all messages when
     -- in development, and warnings and errors in production.
@@ -242,6 +170,9 @@ instance YesodAuth App where
     -- Where to send a user after logout
     logoutDest :: App -> Route App
     logoutDest _ = HomeR
+    -- Override the above two destinations when a Referer: header is present
+    redirectToReferer _ = True
+
 
 {-     -- Override the above two destinations when a Referer: header is present
  -     redirectToReferer :: App -> Bool
@@ -260,9 +191,14 @@ instance YesodAuth App where
 
     -- You can add other plugins like Google Email, email or OAuth here
     authPlugins :: App -> [AuthPlugin App]
-    authPlugins app = [authOpenId Claimed []] ++ extraAuthPlugins
-        -- Enable authDummy login if enabled.
-        where extraAuthPlugins = [authDummy | appAuthDummyLogin $ appSettings app]
+    authPlugins _ = []
+
+    authenticate _ =
+      maybe (UserError AuthMsg.InvalidLogin) Authenticated <$> maybeAuthId
+
+    maybeAuthId = do
+      mToken <- JWT.lookupToken
+      liftHandler $ maybe (return Nothing) tokenToUserId mToken
 
 -- | Access function to determine if a user is logged in.
 isAuthenticated :: Handler AuthResult
@@ -297,3 +233,21 @@ unsafeHandler = Unsafe.fakeHandlerGetLogger appLogger
 -- https://github.com/yesodweb/yesod/wiki/Sending-email
 -- https://github.com/yesodweb/yesod/wiki/Serve-static-files-from-a-separate-domain
 -- https://github.com/yesodweb/yesod/wiki/i18n-messages-in-the-scaffolding
+
+-- Transform UsuarioId to Token 
+userIdToToken :: UsuarioId -> HandlerFor App Text
+userIdToToken userId = do
+  jwtSecret <- getJwtSecret
+  return $ JWT.jsonToToken jwtSecret $ toJSON userId
+
+tokenToUserId :: Text -> Handler (Maybe UsuarioId)
+tokenToUserId token = do
+  jwtSecret <- getJwtSecret
+  let mUserId = fromJSON <$> JWT.tokenToJson jwtSecret token
+  case mUserId of
+    Just (Success userId) -> return $ Just userId
+    _                     -> return Nothing
+
+getJwtSecret :: HandlerFor App Text
+getJwtSecret =
+  getsYesod $ appJwtSecret . appSettings

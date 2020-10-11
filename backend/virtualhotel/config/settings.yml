@@ -39,3 +39,6 @@ database:
 
 copyright: Insert copyright statement here
 #analytics: UA-YOURCODE
+jwt-secret: "_env:JWT_SECRET"
+
+cors-origin-whitelist: ["_env:CORS_ORIGIN:http://localhost:8000"]

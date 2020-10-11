@@ -2,5 +2,5 @@ module Handler.Logout where
 
 import Import
 
-getLogoutR :: Handler Html
-getLogoutR = error "Not yet implemented: getLogoutR"
+getUserLogoutR :: Handler Html
+getUserLogoutR = error "Not yet implemented: getUserLogoutR"

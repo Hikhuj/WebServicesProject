@@ -28,9 +28,8 @@ import           Yesod.Default.Util          (WidgetFileSettings,
 -- loaded from various sources: defaults, environment variables, config files,
 -- theoretically even a database.
 data AppSettings = AppSettings
-    { appStaticDir              :: String
-    -- ^ Directory from which to serve static files.
-    , appDatabaseConf           :: PostgresConf
+    { 
+     appDatabaseConf           :: PostgresConf
     -- ^ Configuration settings for accessing the database.
     , appRoot                   :: Maybe Text
     -- ^ Base for all generated URLs. If @Nothing@, determined
@@ -53,6 +52,10 @@ data AppSettings = AppSettings
     -- ^ Assume that files in the static dir may change after compilation
     , appSkipCombining          :: Bool
     -- ^ Perform no stylesheet/script combining
+    , appJwtSecret              :: Text
+    -- ^ JWT secret key
+    , appCorsOriginWhitelist    :: [Text]
+    -- ^ Origins allowed to perform CORS requests
 
     -- Example app-specific configuration values.
     , appCopyright              :: Text
@@ -72,7 +75,6 @@ instance FromJSON AppSettings where
 #else
                 False
 #endif
-        appStaticDir              <- o .: "static-dir"
         appDatabaseConf           <- o .: "database"
         appRoot                   <- o .:? "approot"
         appHost                   <- fromString <$> o .: "host"
@@ -88,6 +90,8 @@ instance FromJSON AppSettings where
         appSkipCombining          <- o .:? "skip-combining"   .!= dev
 
         appCopyright              <- o .:  "copyright"
+        appJwtSecret              <- o .:  "jwt-secret"
+        appCorsOriginWhitelist    <- o .:  "cors-origin-whitelist"
         appAnalytics              <- o .:? "analytics"
 
         appAuthDummyLogin         <- o .:? "auth-dummy-login"      .!= dev

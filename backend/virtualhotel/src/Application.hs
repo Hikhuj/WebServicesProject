@@ -27,6 +27,7 @@ import Import
 import Language.Haskell.TH.Syntax           (qLocation)
 import Network.HTTP.Client.TLS              (getGlobalManager)
 import Network.Wai (Middleware)
+import Network.Wai.Middleware.Cors
 import Network.Wai.Handler.Warp             (Settings, defaultSettings,
                                              defaultShouldDisplayException,
                                              runSettings, setHost,
@@ -37,6 +38,8 @@ import Network.Wai.Middleware.RequestLogger (Destination (Logger),
                                              mkRequestLogger, outputFormat)
 import System.Log.FastLogger                (defaultBufSize, newStdoutLoggerSet,
                                              toLogStr)
+import System.Environment (lookupEnv)
+import qualified Prelude                              as P
 
 -- Import all relevant handler modules here.
 -- Don't forget to add new modules to your cabal file!
@@ -52,6 +55,9 @@ import Handler.Room
 import Handler.Comment
 import Handler.Profile
 import Handler.Home
+import Handler.Login
+import Handler.Register
+import Handler.Logout
 
 
 
@@ -70,9 +76,6 @@ makeFoundation appSettings = do
     -- subsite.
     appHttpManager <- getGlobalManager
     appLogger <- newStdoutLoggerSet defaultBufSize >>= makeYesodLogger
-    appStatic <-
-        (if appMutableStatic appSettings then staticDevel else static)
-        (appStaticDir appSettings)
 
     -- We need a log function to create a connection pool. We need a connection
     -- pool to create our foundation. And we need our foundation to get a
@@ -104,7 +107,26 @@ makeApplication foundation = do
     logWare <- makeLogWare foundation
     -- Create the WAI application and apply middlewares
     appPlain <- toWaiAppPlain foundation
-    return $ logWare $ defaultMiddlewaresNoLogging appPlain
+    settings <- getAppSettings
+    return $ logWare $ defaultMiddlewaresNoLogging $ (corsified $ appCorsOriginWhitelist settings) appPlain
+
+-- | CORS middleware configured with 'appCorsResourcePolicy'.
+corsified :: [Text] -> Middleware
+corsified = cors . const . Just . appCorsResourcePolicy
+
+-- | CORS resource policy to be used with 'corsified' middleware.
+appCorsResourcePolicy :: [Text] -> CorsResourcePolicy
+appCorsResourcePolicy corsWhitelist = CorsResourcePolicy {
+    corsOrigins        = Just (encodeUtf8 <$> corsWhitelist, False)
+  , corsMethods        = ["OPTIONS", "GET", "PUT", "POST", "PATCH" , "DELETE"]
+  , corsRequestHeaders = ["Authorization", "Content-Type"]
+  , corsExposedHeaders = Nothing
+  , corsMaxAge         = Nothing
+  , corsVaryOrigin     = False
+  , corsRequireOrigin  = False
+  , corsIgnoreFailures = False
+}
+
 
 makeLogWare :: App -> IO Middleware
 makeLogWare foundation =
@@ -146,6 +168,14 @@ getApplicationDev = do
 
 getAppSettings :: IO AppSettings
 getAppSettings = loadYamlSettings [configSettingsYml] [] useEnv
+
+checkEnvironment :: IO ()
+checkEnvironment = do
+  mJwtSecret <- lookupEnv "JWT_SECRET"
+  case mJwtSecret of
+    Nothing ->
+      P.errorWithoutStackTrace "Set the \"JWT_SECRET\" environment variable"
+    _ -> return ()
 
 -- | main function for use by yesod devel
 develMain :: IO ()
