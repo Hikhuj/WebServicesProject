@@ -24,3 +24,7 @@
 /api/v1/auth/signin UserLoginR POST
 /api/v1/auth/signup UserRegisterR POST
 /api/v1/auth/signout UserLogoutR GET
+/api/v1/types/transports TransportTypesR GET POST
+/api/v1/transports TransportsR GET POST
+/api/v1/types/transports/#TipoTransporteId TransportTypeR GET PUT
+/api/v1/transports/#TransporteId TransportR GET PUT
