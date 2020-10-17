@@ -215,4 +215,3 @@ Posteriormente, debe de obtener un JWT. Este seguro de establecerlo como un Bear
 ## FrontEnd (WORK IN PROGRESS)
 
 Sigue en etapas tempranas. El plan inicial era implementar un front-end sencillo en React, junto a gestores de estado como Redux. Sin embargo, Elm es otra opcion atractiva, debido a que cae bajo el paradigma de programacion funcional
-````
