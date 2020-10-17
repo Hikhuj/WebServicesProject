@@ -152,7 +152,7 @@ Adicionalmente, para este proyecto, se tomo en cuenta usar autenticacion y autor
 
 - Este seguro de tener Stack instalado. Lo necesitara para compilar el proyecto
 
-````
+```
 --Usuarios de MacOS--
 
 hombrew install haskell-stack
