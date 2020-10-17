@@ -106,10 +106,14 @@ instance Yesod App where
     isAuthorized HotelsR _           = isAuthenticated
     isAuthorized ReservationsR _ = isAuthenticated
     isAuthorized RoomsR  _   = isAuthenticated
+    isAuthorized TransportTypesR  _   = isAuthenticated
+    isAuthorized TransportsR  _   = isAuthenticated
     isAuthorized (UserR _) _            = isAuthenticated
     isAuthorized (HotelR _) _           = isAuthenticated
     isAuthorized (RoomR _) _           = isAuthenticated
     isAuthorized (ReservationR _) _             = isAuthenticated
+    isAuthorized (TransportTypeR _)  _   = isAuthenticated
+    isAuthorized (TransportR _)  _   = isAuthenticated
     -- Temporarily set all routes to not require authentication
     {- isAuthorized _ _ = return Authorized -}
     isAuthorized UserRegisterR _ = return Authorized
