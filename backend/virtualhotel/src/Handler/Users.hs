@@ -13,6 +13,6 @@ getUsersR = do
 postUsersR :: Handler Value
 postUsersR = do
  newUser <- requireCheckJsonBody :: Handler Usuario
- runDB $ insert newUser
+ _ <- runDB $ insert newUser
  sendStatusJSON created201 (object ["New User" .= newUser])
 
