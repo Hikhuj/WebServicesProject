@@ -24,44 +24,13 @@ postUserLoginR = do
  login <- requireCheckJsonBody :: Handler Login
  let userMail = email login
  let userPass = pass login
- mUser <- runDB $ selectFirst [UsuarioUsu_email ==. userMail ] []
+ mUser <- runDB $ selectFirst [UsuarioUsu_estado ==. "A", UsuarioUsu_email ==. userMail ] []
  case mUser of
    Just (Entity usuarioId usuario@Usuario {..}) | validPwd ->
      encodeUsuario usuarioId usuario
      where validPwd = verifyPass userPass usuarioUsu_password
    _ ->
      notAuthenticated
-
-
-{- postUserLoginR :: Handler Value
- - postUserLoginR =
- -  withForm loginForm $ \Login {..} -> do
- -    mUser <- runDB $get404 (toSqlKey UsuarioUsu_email) loginUsuEmail
- -    case mUser of
- -      Just (Entity usuarioId usuario@Usuario {..}) | validPwd ->
- -        encodeUsuario usuarioId usuario
- -        where validPwd = verifyPass loginPassword usuarioUsu_password
- -      _ ->
- -        notAuthenticated -}
-
-{- data LoginData = LoginData {
- -     email :: Text
- -   , password :: Text
- - } -}
-{- 
- - instance FromJSON LoginData
- - instance ToJSON LoginData
- -  -}
-  {- newLogin <- requireCheckJsonBody :: Maybe LoginData
-   - let contents = convertToByteString newLogin
-   - let Just mEmail = decode newLogin :: Maybe Text
-   - return $ object (["message" .= mEmail]) -}
-  {- case mUser of
-   -   Just (Entity usuarioId usuario@Usuario {..}) | validPwd ->
-   -     encodeUsuario usuarioId usuario
-   -     where validPwd = verifyPass mPassword usuarioUsu_password
-   -   _ ->
-   -     notAuthenticated -}
 
 -- | Encode a 'Usuario' with a JWT authentication token.
 encodeUsuario :: UsuarioId -> Usuario -> Handler Value
