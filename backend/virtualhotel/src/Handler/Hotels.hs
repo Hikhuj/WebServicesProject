@@ -7,7 +7,7 @@ import Database.Persist.Postgresql
 
 getHotelsR :: Handler Value
 getHotelsR = do
- hotels <- runDB $ selectList [] [Asc HotelId]
+ hotels <- runDB $ selectList [HotelHot_estado ==. "A"] [Asc HotelId]
  sendStatusJSON ok200 (object ["hotels" .= hotels])
 
 postHotelsR :: Handler Value
