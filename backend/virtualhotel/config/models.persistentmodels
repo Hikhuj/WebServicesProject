@@ -3,20 +3,22 @@
 
 
 Hotel json -- Adding "json" causes ToJSON and FromJSON instances to be derived.
- hot_nombre Text
- hot_telefono Text
- hot_email Text
- hot_direccion Text
- hot_categoria Text
+ hot_nombre Text sqltype=varchar(50) 
+ hot_telefono Text sqltype=varchar(15) 
+ hot_email Text sqltype=varchar(50) 
+ hot_direccion Text sqltype=varchar(100) 
+ hot_categoria Text sqltype=char(1) 
+ hot_estado Text sqltype=char(1) 
  deriving Show
 
 Usuario json -- Adding "json" causes ToJSON and FromJSON instances to be derived.
- usu_nombre Text
- usu_identificacion Text
- usu_password Text
- usu_email Text
- usu_estado Text default='A'
+ usu_nombre Text sqltype=varchar(50)
+ usu_identificacion Text sqltype=varchar(20)
+ usu_password Text sqltype=varchar(10)
+ usu_email Text sqltype=varchar(50)
+ usu_estado Text default='A' sqltype=char(1)
  usu_fec_nac UTCTime default=now()
+ usu_telefono Text default='00000000' sqltype=varchar(15)
  UniqueUsu_email usu_email sql=UniqueUsuEmail
  deriving Typeable
 
@@ -25,27 +27,30 @@ Reservacion json -- Adding "json" causes ToJSON and FromJSON instances to be der
  fk_hab_codigo HabitacionId
  res_fecha_ingreso UTCTime default=now()
  res_fecha_salida UTCTime default=now()
+ res_estado Text sqltype=char(1)
  deriving Show
  
 Habitacion json -- Adding "json" causes ToJSON and FromJSON instances to be derived.
  fk_hot_codigo HotelId
  hab_numero Int
  hab_capacidad Int
- hab_tipo Text
- hab_descripcion Text
- hab_estado Text
+ hab_tipo Text sqltype=varchar(10)
+ hab_descripcion Text sqltype=varchar(100)
+ hab_estado Text sqltype=char(1)
  hab_precio Rational
  deriving Eq
  deriving Show
 
 TipoTransporte json -- Adding "json" causes ToJSON and FromJSON instances to be derived.
- tip_descripcion Text
+ tip_descripcion Text sqltype=varchar(60)
+ tip_estado Text sqltype=char(1)
 
 Transporte json -- Adding "json" causes ToJSON and FromJSON instances to be derived.
  fk_usu_codigo UsuarioId
  fk_tip_transporte TipoTransporteId
- tra_descripcion Text
+ tra_descripcion Text sqltype=varchar(60)
  tra_precio Rational
+ tra_estado Text sqltype=char(1)
  tra_fecha_inicio UTCTime default=now()
  tra_fecha_fin UTCTime default=now()
  deriving Eq
