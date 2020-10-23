@@ -7,7 +7,7 @@ import Database.Persist.Postgresql
 
 getReservationsR :: Handler Value
 getReservationsR = do
- reservations <- runDB $ selectList [] [Asc ReservacionId]
+ reservations <- runDB $ selectList [ReservacionRes_estado ==. "A"] [Asc ReservacionId]
  sendStatusJSON ok200 (object ["reservations" .= reservations])
 
 postReservationsR :: Handler Value

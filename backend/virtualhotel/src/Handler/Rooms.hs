@@ -4,10 +4,11 @@ module Handler.Rooms where
 
 import Import
 import Database.Persist.Postgresql
+import Data.Text
 
 getRoomsR :: Handler Value
 getRoomsR = do
- rooms <- runDB $ selectList [] [Asc HabitacionId]
+ rooms <- runDB $ selectList [HabitacionHab_estado ==. "A"] [Asc HabitacionId]
  sendStatusJSON ok200 (object ["rooms" .= rooms])
 
 postRoomsR :: Handler Value

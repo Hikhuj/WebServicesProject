@@ -5,14 +5,28 @@ module Handler.Reservation where
 import Database.Persist.Postgresql
 import Import
 
+--GET
 getReservationR :: ReservacionId -> Handler Value
 getReservationR reservationId = do
- reservation <- runDB $ get404 reservationId
- return $ object ["reservation" .= reservation]
+ mReservation <- runDB $ selectFirst [ReservacionRes_estado ==. "A", ReservacionId ==. reservationId ] []
+ case mReservation of
+  Just mReservation -> 
+   return $ object ["reservation" .= mReservation]
+  _ ->
+   notFound
 
+--Delete (Under PATCH)
 patchReservationR :: ReservacionId -> Handler Value
-patchReservationR = error "NO IMPLEMENTADO"
+patchReservationR reservationId = do
+ mReservationId <- runDB $ get reservationId
+ case mReservationId of
+  Just mReservationId ->
+   runDB $ update reservationId [ReservacionRes_estado =. "E"]
+  _ -> 
+   notFound
+ return $ object ["message" .= String "Deleted"]
 
+-- UPDATE / REPLAC
 putReservationR :: ReservacionId -> Handler Value
 putReservationR reservationId = do
  _ <- runDB $ get404 reservationId
