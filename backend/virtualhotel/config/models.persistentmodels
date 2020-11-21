@@ -25,6 +25,7 @@ Usuario json -- Adding "json" causes ToJSON and FromJSON instances to be derived
 Reservacion json -- Adding "json" causes ToJSON and FromJSON instances to be derived.
  fk_usu_codigo UsuarioId
  fk_hab_codigo HabitacionId
+ fk_tra_codigo TransporteId
  res_fecha_ingreso UTCTime default=now()
  res_fecha_salida UTCTime default=now()
  res_estado Text sqltype=char(1)
@@ -46,7 +47,6 @@ TipoTransporte json -- Adding "json" causes ToJSON and FromJSON instances to be 
  tip_estado Text sqltype=char(1)
 
 Transporte json -- Adding "json" causes ToJSON and FromJSON instances to be derived.
- fk_usu_codigo UsuarioId
  fk_tip_transporte TipoTransporteId
  tra_descripcion Text sqltype=varchar(60)
  tra_precio Rational
