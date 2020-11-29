@@ -130,9 +130,14 @@ type ThumbnailSize
 
 
 type alias Room =
-    { url : String
-    , size : Int
-    , title : String
+    { id: Int
+ , room_number : Int
+ , capacity : Int
+ , type_ : String
+ , description : String
+ , state :  String
+ , priceNumerator : Int
+ , priceDenominator : Int
     }
 
 

@@ -38,7 +38,7 @@ Habitacion json -- Adding "json" causes ToJSON and FromJSON instances to be deri
  hab_tipo Text sqltype=varchar(10)
  hab_descripcion Text sqltype=varchar(100)
  hab_estado Text sqltype=char(1)
- hab_precio Rational
+ hab_precio Double
  deriving Eq
  deriving Show
 
