@@ -9,6 +9,7 @@ module Room exposing (main)
 -- Html Events
 -- Random library
 -- JSON Decoders (Official and Third Party, for large decodings)
+
 import Browser
 import Html exposing (..)
 import Html.Attributes exposing (class, classList, id, name, src, title, type_)
@@ -17,6 +18,8 @@ import Http
 import Json.Decode exposing (Decoder, bool, int, list, string, succeed)
 import Json.Decode.Pipeline exposing (optional, required)
 import Random
+
+
 
 -- Urlprefix (WIP. should be moved to .env)
 
@@ -66,8 +69,23 @@ viewLoaded rooms selectedUrl chosenSize =
     [ h1 [] [ text "Room Grove" ]
     , h2 [] [ text "Virtual Hotel" ]
     , button [ onClick ClickedSurpriseMe ] [ text "Sorprendeme!" ]
-    , h3 [] [ text "Thumbnail Size: " ]
-    , div [ id "choose-size" ] (List.map viewSizeChooser [ Small, Medium, Large ])
+    , table [ class "table table--responsive" ]
+        [ thead []
+            [ tr []
+                [ th [] [ text "Id" ], th [] [ text "Name" ], th [] [ text "Price" ] , th [] [ text "Status"]  ]
+            ]
+        , tbody []
+            [ tr []
+                [ td [] [ text " 1 " ]
+                , td [] [ text "Iscus" ]
+                , td [] [ text "$30.99" ]
+                , td [] [ button [ class "button button--small button--green" ] [ text "Book!" ] ]
+                ]
+            ]
+        ]
+
+    {--, h3 [] [ text "Thumbnail Size: " ]
+      - , div [ id "choose-size" ] (List.map viewSizeChooser [ Small, Medium, Large ]) --}
     , div [ id "thumbnails", class (sizeToString chosenSize) ] (List.map (viewThumbnail selectedUrl) rooms)
     , img [ class "large", src (urlPrefix ++ "large/" ++ selectedUrl) ] []
     ]
@@ -75,11 +93,13 @@ viewLoaded rooms selectedUrl chosenSize =
 
 viewThumbnail : String -> Room -> Html Msg
 viewThumbnail selectedUrl thumb =
-    img 
-     [ src (urlPrefix ++ thumb.url)
-      , title (thumb.title ++ " [" ++ String.fromInt thumb.size ++ "KB]")
-      , classList [ ( "selected", selectedUrl == thumb.url ) ]
-      , onClick (ClickedRoom thumb.url) ] []
+    img
+        [ src (urlPrefix ++ thumb.url)
+        , title (thumb.title ++ " [" ++ String.fromInt thumb.size ++ "KB]")
+        , classList [ ( "selected", selectedUrl == thumb.url ) ]
+        , onClick (ClickedRoom thumb.url)
+        ]
+        []
 
 
 viewSizeChooser : ThumbnailSize -> Html Msg
@@ -115,13 +135,17 @@ type alias Room =
     , title : String
     }
 
+
+
 -- Room decoder fromJSON
+
+
 roomDecoder : Decoder Room
-roomDecoder = 
-        succeed Room
-         |> required "url" string
-         |> required "size" int
-         |> optional "title" string "(untitled)"
+roomDecoder =
+    succeed Room
+        |> required "url" string
+        |> required "size" int
+        |> optional "title" string "(untitled)"
 
 
 type Status
@@ -153,9 +177,11 @@ update msg model =
             ( { model | status = selectUrl url model.status }, Cmd.none )
 
         ClickedSize size ->
-            ( { model | chosenSize = size
-            }, Cmd.none )
-
+            ( { model
+                | chosenSize = size
+              }
+            , Cmd.none
+            )
 
         ClickedSurpriseMe ->
             case model.status of
@@ -183,6 +209,8 @@ update msg model =
 
         GotRooms (Err _) ->
             ( model, Cmd.none )
+
+
 selectUrl : String -> Status -> Status
 selectUrl url status =
     case status of
@@ -195,12 +223,18 @@ selectUrl url status =
         Errored errorMessage ->
             status
 
-{-- Initial Command for retrieving information from server, as an HTTP GET request  --}
+
+
+{--Initial Command for retrieving information from server, as an HTTP GET request  --}
+
+
 initialCmd : Cmd Msg
 initialCmd =
-        Http.get
+    Http.get
         { url = "http://elm-in-action.com/photos/list.json"
-        , expect = Http.expectJson GotRooms (list roomDecoder) }
+        , expect = Http.expectJson GotRooms (list roomDecoder)
+        }
+
 
 main : Program () Model Msg
 main =
