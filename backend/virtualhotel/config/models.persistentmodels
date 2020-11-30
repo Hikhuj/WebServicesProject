@@ -49,7 +49,7 @@ TipoTransporte json -- Adding "json" causes ToJSON and FromJSON instances to be 
 Transporte json -- Adding "json" causes ToJSON and FromJSON instances to be derived.
  fk_tip_transporte TipoTransporteId
  tra_descripcion Text sqltype=varchar(60)
- tra_precio Rational
+ tra_precio Double
  tra_estado Text sqltype=char(1)
  tra_fecha_inicio UTCTime default=now()
  tra_fecha_fin UTCTime default=now()
