@@ -18,7 +18,7 @@ import Http
 import Json.Decode exposing (Decoder, bool, float, int, list, string, succeed)
 import Json.Decode.Pipeline exposing (optional, required)
 import Random
-
+import Model exposing (Room)
 
 
 -- Urlprefix (WIP. should be moved to .env)
@@ -76,7 +76,7 @@ viewLoaded rooms =
             [ tr []
                 [ th [] [ text "Id" ], th [] [ text "Name" ], th [] [ text "Price" ], th [] [ text "Hotel" ], th [] [ text "Room Capacity" ], th [] [ text "Status" ] ]
             ]
-        , tbody [] (List.map (\room -> viewRoom room) rooms)
+        , tbody [] (List.map viewRoom  rooms )
         ]
 
     {--, h3 [] [ text "Room Size: " ]
@@ -97,17 +97,6 @@ viewRoom room =
         , td [] [ button [ class "button button--small button--green"] [ text "Book!" ], button [ class "button button--small button--primary"] [ text "Modify!" ] ]
         ]
 
-
-type alias Room =
-    { hab_capacidad : Int
-    , hab_descripcion : String
-    , hab_estado : String
-    , fk_hot_codigo : Int
-    , hab_numero : Int
-    , id : Int
-    , hab_tipo : String
-    , hab_precio : Float
-    }
 
 
 
