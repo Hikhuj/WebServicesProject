@@ -15,7 +15,7 @@ import Html exposing (..)
 import Html.Attributes exposing (class, classList, id, name, src, title, type_)
 import Html.Events exposing (onClick)
 import Http
-import Json.Decode exposing (Decoder, bool, int, list, string, succeed)
+import Json.Decode exposing (Decoder, bool, float, int, list, string, succeed)
 import Json.Decode.Pipeline exposing (optional, required)
 import Random
 
@@ -30,114 +30,83 @@ urlPrefix =
 
 
 
+-- Rooms API Url, Requires JWT
+
+
+roomsApiUrlPrefix : String
+roomsApiUrlPrefix =
+    "http://rt:3000/api/v1/rooms"
+
+
+
 -- Selected Room record constant
-
-
-selectedRoom : { description : String, data : String }
-selectedRoom =
-    { description = "ClickedRoom", data = "1.jpeg" }
-
-
-
 -- Msg type. What we expect to get from our REST API
 
 
 type Msg
-    = ClickedRoom String
-    | GotRandomRoom Room
-    | ClickedSize ThumbnailSize
-    | ClickedSurpriseMe
-    | GotRooms (Result Http.Error (List Room))
+    = GotRooms (Result Http.Error (List Room))
 
 
 view : Model -> Html Msg
 view model =
     div [ class "content" ] <|
         case model.status of
-            Loaded rooms selectedUrl ->
-                viewLoaded rooms selectedUrl model.chosenSize
+            Loaded rooms ->
+                viewLoaded rooms
 
             Loading ->
-                []
+                [ div [ class "loadingSpinner" ]
+                    [ span [ class "loadingSpinner-inner" ] []
+                    , span [ class "loadingSpinner-inner" ] []
+                    , span [ class "loadingSpinner-inner" ] []
+                    , span [ class "loadingSpinner-inner" ] []
+                    ]
+                ]
 
             Errored errorMessage ->
                 [ text ("Error: " ++ errorMessage) ]
 
 
-viewLoaded : List Room -> String -> ThumbnailSize -> List (Html Msg)
-viewLoaded rooms selectedUrl chosenSize =
-    [ h1 [] [ text "Room Grove" ]
-    , h2 [] [ text "Virtual Hotel" ]
-    , button [ onClick ClickedSurpriseMe ] [ text "Sorprendeme!" ]
+viewLoaded : List Room -> List (Html Msg)
+viewLoaded rooms =
+    [ h3 [ class "text-huge text-black text-withSubtitle" ] [ text "Virtual Hotel" ]
+    , h4 [ class "text-big text-gray m-none" ] [ text "Rooms" ] 
     , table [ class "table table--responsive" ]
         [ thead []
             [ tr []
-                [ th [] [ text "Id" ], th [] [ text "Name" ], th [] [ text "Price" ] , th [] [ text "Status"]  ]
+                [ th [] [ text "Id" ], th [] [ text "Name" ], th [] [ text "Price" ], th [] [ text "Hotel" ], th [] [ text "Room Capacity" ], th [] [ text "Status" ] ]
             ]
-        , tbody []
-            [ tr []
-                [ td [] [ text " 1 " ]
-                , td [] [ text "Iscus" ]
-                , td [] [ text "$30.99" ]
-                , td [] [ button [ class "button button--small button--green" ] [ text "Book!" ] ]
-                ]
-            ]
+        , tbody [] (List.map (\room -> viewRoom room) rooms)
         ]
 
-    {--, h3 [] [ text "Thumbnail Size: " ]
+    {--, h3 [] [ text "Room Size: " ]
       - , div [ id "choose-size" ] (List.map viewSizeChooser [ Small, Medium, Large ]) --}
-    , div [ id "thumbnails", class (sizeToString chosenSize) ] (List.map (viewThumbnail selectedUrl) rooms)
-    , img [ class "large", src (urlPrefix ++ "large/" ++ selectedUrl) ] []
+    {--, div [ id "rooms", class (sizeToString chosenSize) ] (List.map (viewRoom selectedUrl) rooms) --}
+    {--, img [ class "large", src (urlPrefix ++ "large/" ++ selectedUrl) ] [] --}
     ]
 
 
-viewThumbnail : String -> Room -> Html Msg
-viewThumbnail selectedUrl thumb =
-    img
-        [ src (urlPrefix ++ thumb.url)
-        , title (thumb.title ++ " [" ++ String.fromInt thumb.size ++ "KB]")
-        , classList [ ( "selected", selectedUrl == thumb.url ) ]
-        , onClick (ClickedRoom thumb.url)
+viewRoom : Room -> Html Msg
+viewRoom room =
+    tr []
+        [ td [] [ text (String.fromInt room.id) ]
+        , td [] [ text room.hab_descripcion ]
+        , td [] [ text (String.fromFloat room.hab_precio) ]
+        , td [] [ text (String.fromInt room.fk_hot_codigo) ]
+        , td [] [ text (String.fromInt room.hab_capacidad) ]
+        , td [] [ button [ class "button button--small button--green"] [ text "Book!" ], button [ class "button button--small button--primary"] [ text "Modify!" ] ]
         ]
-        []
-
-
-viewSizeChooser : ThumbnailSize -> Html Msg
-viewSizeChooser size =
-    label []
-        [ input [ type_ "radio", name "size", onClick (ClickedSize size) ] []
-        , text (sizeToString size)
-        ]
-
-
-sizeToString : ThumbnailSize -> String
-sizeToString size =
-    case size of
-        Small ->
-            "small"
-
-        Medium ->
-            "medium"
-
-        Large ->
-            "large"
-
-
-type ThumbnailSize
-    = Small
-    | Medium
-    | Large
 
 
 type alias Room =
-    { id: Int
- , room_number : Int
- , capacity : Int
- , type_ : String
- , description : String
- , state :  String
- , priceNumerator : Int
- , priceDenominator : Int
+    { hab_capacidad : Int
+    , hab_descripcion : String
+    , hab_estado : String
+    , fk_hot_codigo : Int
+    , hab_numero : Int
+    , id : Int
+    , hab_tipo : String
+    , hab_precio : Float
     }
 
 
@@ -148,86 +117,46 @@ type alias Room =
 roomDecoder : Decoder Room
 roomDecoder =
     succeed Room
-        |> required "url" string
-        |> required "size" int
-        |> optional "title" string "(untitled)"
+        |> required "hab_capacidad" int
+        |> required "hab_descripcion" string
+        |> required "hab_estado" string
+        |> required "fk_hot_codigo" int
+        |> required "hab_numero" int
+        |> required "id" int
+        |> required "hab_tipo" string
+        |> required "hab_precio" float
 
 
 type Status
-    = Loaded (List Room) String
+    = Loaded (List Room)
     | Loading
     | Errored String
 
 
 type alias Model =
     { status : Status
-    , chosenSize : ThumbnailSize
     }
 
 
 initialModel : Model
 initialModel =
     { status = Loading
-    , chosenSize = Medium
     }
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        GotRandomRoom room ->
-            ( { model | status = selectUrl room.url model.status }, Cmd.none )
-
-        ClickedRoom url ->
-            ( { model | status = selectUrl url model.status }, Cmd.none )
-
-        ClickedSize size ->
-            ( { model
-                | chosenSize = size
-              }
-            , Cmd.none
-            )
-
-        ClickedSurpriseMe ->
-            case model.status of
-                Loaded (firstRoom :: otherRooms) _ ->
-                    Random.uniform firstRoom otherRooms
-                        |> Random.generate GotRandomRoom
-                        |> Tuple.pair model
-
-                Loaded [] _ ->
-                    ( model, Cmd.none )
-
-                Loading ->
-                    ( model, Cmd.none )
-
-                Errored errorMessage ->
-                    ( model, Cmd.none )
-
         GotRooms (Ok rooms) ->
             case rooms of
                 first :: rest ->
-                    ( { model | status = Loaded rooms first.url }, Cmd.none )
+                    ( { model | status = Loaded rooms }, Cmd.none )
 
                 [] ->
                     ( { model | status = Errored "Ninguna Habitacion Encontrada" }, Cmd.none )
 
         GotRooms (Err _) ->
-            ( model, Cmd.none )
-
-
-selectUrl : String -> Status -> Status
-selectUrl url status =
-    case status of
-        Loaded rooms _ ->
-            Loaded rooms url
-
-        Loading ->
-            status
-
-        Errored errorMessage ->
-            status
-
+            ( { model | status = Errored "An Unknown Error Ocurred. Please Try Again Later" }, Cmd.none )
 
 
 {--Initial Command for retrieving information from server, as an HTTP GET request  --}
@@ -235,9 +164,14 @@ selectUrl url status =
 
 initialCmd : Cmd Msg
 initialCmd =
-    Http.get
-        { url = "http://elm-in-action.com/photos/list.json"
+    Http.request
+        { method = "GET"
+        , headers = [ Http.header "Authorization" ("Bearer " ++ "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqd3QiOjF9.p139sM1pm15BpCff-_EruNP364udN02nCSBtuY8mjCI") ]
+        , url = roomsApiUrlPrefix
+        , body = Http.emptyBody
         , expect = Http.expectJson GotRooms (list roomDecoder)
+        , timeout = Nothing
+        , tracker = Nothing
         }
 
 
