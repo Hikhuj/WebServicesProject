@@ -9,7 +9,7 @@ import Data.Text
 getRoomsR :: Handler Value
 getRoomsR = do
  rooms <- runDB $ selectList [HabitacionHab_estado ==. "A"] [Asc HabitacionId]
- sendStatusJSON ok200 (object ["rooms" .= rooms])
+ sendStatusJSON ok200 rooms
 
 postRoomsR :: Handler Value
 postRoomsR = do
