@@ -15,7 +15,7 @@ getRoomR roomId = do
  mRoom <- runDB $ selectFirst [HabitacionHab_estado ==. "A", HabitacionId ==. roomId ] []
  case mRoom of
   Just mRoom -> 
-   return $ object ["room" .= mRoom]
+   returnJson mRoom
   _ ->
    notFound
 
