@@ -1,7 +1,7 @@
-{- Room View -}
+{- Rooms View -}
 
 
-module Room exposing (main)
+module Rooms exposing (Model, Msg, init, update, view)
 
 -- Browser elements and sandbox
 -- Html
@@ -17,26 +17,8 @@ import Html.Events exposing (onClick)
 import Http
 import Json.Decode exposing (Decoder, bool, float, int, list, string, succeed)
 import Json.Decode.Pipeline exposing (optional, required)
-import Random
+import Constants as C
 import Model exposing (Room)
-
-
--- Urlprefix (WIP. should be moved to .env)
-
-
-urlPrefix : String
-urlPrefix =
-    "http://elm-in-action.com/"
-
-
-
--- Rooms API Url, Requires JWT
-
-
-roomsApiUrlPrefix : String
-roomsApiUrlPrefix =
-    "http://rt:3000/api/v1/rooms"
-
 
 
 -- Selected Room record constant
@@ -150,24 +132,30 @@ update msg model =
 
 {--Initial Command for retrieving information from server, as an HTTP GET request  --}
 
+roomsApiUrl : String
+roomsApiUrl = 
+        C.apiUrl ++ "rooms"
 
 initialCmd : Cmd Msg
 initialCmd =
     Http.request
         { method = "GET"
-        , headers = [ Http.header "Authorization" ("Bearer " ++ "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqd3QiOjF9.p139sM1pm15BpCff-_EruNP364udN02nCSBtuY8mjCI") ]
-        , url = roomsApiUrlPrefix
+        , headers = [ Http.header "Authorization" ("Bearer " ++ "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqd3QiOjZ9.eVgBafOwYssLx9tn_skX3CdE7PAVNyp0oisYibH7Xss") ]
+        , url = roomsApiUrl
         , body = Http.emptyBody
         , expect = Http.expectJson GotRooms (list roomDecoder)
         , timeout = Nothing
         , tracker = Nothing
         }
 
+init : () -> (Model , Cmd Msg)
+init () =
+        ( initialModel, initialCmd)
 
 main : Program () Model Msg
 main =
     Browser.element
-        { init = \_ -> ( initialModel, initialCmd )
+        { init = init
         , view = view
         , update = update
         , subscriptions = \_ -> Sub.none

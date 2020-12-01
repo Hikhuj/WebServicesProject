@@ -1,31 +1,66 @@
 module Main exposing (main)
 
 import Browser exposing (Document)
+import Browser.Navigation as Nav
 import Html exposing (Html, a, footer, h1, li, nav, text, ul)
 import Html.Attributes exposing (classList, href)
+import Html.Lazy exposing (lazy)
+import Rooms
+import Url exposing (Url)
+import Url.Parser as Parser exposing ((</>), Parser, s, string)
 
 
 type alias Model =
-    { page : Page }
+    { page : Page
+    , key : Nav.Key
+    }
 
 
 type Page
+    = RoomsPage Rooms.Model
+      {--| RoomPage String --}
+      {--| ModifyRoomPage String
+      - | CreateRoomPage
+      - | ReservationsPage --}
+    | NotFound
+
+
+type Route
     = Rooms
-    | ViewRoom
-    | ModifyRoom
-    | CreateRoom
-    | Reservations
+
+
+
+{--| Room
+          - | CreateRoom
+          - | Reservations --}
+
+
+parser : Parser (Route -> a) a
+parser =
+    Parser.oneOf
+        [ Parser.map Rooms Parser.top
+        , Parser.map Rooms (s "rooms")
+
+        {--, Parser.map Room (s "rooms" </> Parser.string) --}
+        ]
 
 
 view : Model -> Document Msg
 view model =
     let
         content =
-            text "Welcome!"
+            case model.page of
+                RoomsPage rooms ->
+                    Rooms.view rooms
+                        |> Html.map GotRoomsMsg
+
+                NotFound ->
+                    h1 [] [ text "Not Found" ]
     in
     { title = "Virtual Hotel"
     , body =
-        [ viewHeader model.page
+        -- Lazy implementation for viewHeader
+        [ lazy viewHeader model.page
         , content
         , viewFooter
         ]
@@ -45,18 +80,34 @@ viewHeader page =
         links =
             ul []
                 [ navLink Rooms { url = "rooms", caption = "Rooms" }
-                , navLink Reservations { url = "reservations", caption = "Reservations" }
+
+                {--, navLink Reservations { url = "reservations", caption = "ReservationsPage" } --}
                 ]
 
-        navLink : Page -> { url : String, caption : String } -> Html msg
-        navLink targetPage ({ url, caption } as config) =
-            li [ classList [ ( "tabs-item is-selected", page == targetPage ) ] ]
+        navLink : Route -> { url : String, caption : String } -> Html msg
+        navLink route ({ url, caption } as config) =
+            li [ classList [ ( "tabs-item is-selected", isActive { link = route, page = page } ) ] ]
                 [ a [ href config.url ] [ text config.caption ] ]
     in
     nav [] [ logo, links ]
 
 
+isActive : { link : Route, page : Page } -> Bool
+isActive { link, page } =
+    case ( link, page ) of
+        ( Rooms, RoomsPage _ ) ->
+            True
 
+        {--( Rooms, RoomPage _ ) -> True --}
+        {--( Rooms, ModifyRoomPage _ ) -> True --}
+        {--( Rooms, CreateRoomPage  ) -> True --}
+        ( Rooms, _ ) ->
+            False
+
+
+
+{--( Reservations , ReservationsPage ) -> True --}
+{--( Reservations , _ ) -> False --}
 -- Footer View
 
 
@@ -66,7 +117,9 @@ viewFooter =
 
 
 type Msg
-    = NothingYet
+    = ClickedLink Browser.UrlRequest
+    | ChangedUrl Url
+    | GotRoomsMsg Rooms.Msg
 
 
 
@@ -75,7 +128,31 @@ type Msg
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    ( model, Cmd.none )
+    case msg of
+        GotRoomsMsg roomsMsg ->
+            case model.page of
+                RoomsPage rooms ->
+                    toRooms model (Rooms.update roomsMsg rooms)
+
+                NotFound ->
+                    ( model, Cmd.none )
+
+        ChangedUrl url ->
+            updateUrl url model
+
+        _ ->
+            ( model, Cmd.none )
+
+
+
+-- toRooms view updater
+
+
+toRooms : Model -> ( Rooms.Model, Cmd Rooms.Msg ) -> ( Model, Cmd Msg )
+toRooms model ( rooms, cmd ) =
+    ( { model | page = RoomsPage rooms }
+    , Cmd.map GotRoomsMsg cmd
+    )
 
 
 
@@ -87,11 +164,37 @@ subscriptions model =
     Sub.none
 
 
+
+-- init
+
+
+init : () -> Url -> Nav.Key -> ( Model, Cmd Msg )
+init flags url key =
+    updateUrl url { page = NotFound, key = key }
+
+
+
+-- Converts Url to Page
+
+
+updateUrl : Url -> Model -> ( Model, Cmd Msg )
+updateUrl url model =
+    case Parser.parse parser url of
+        Just Rooms ->
+            Rooms.init ()
+                |> toRooms model
+
+        Nothing ->
+            ( { model | page = NotFound }, Cmd.none )
+
+
 main : Program () Model Msg
 main =
-    Browser.document
-        { init = \_ -> ( { page = Reservations }, Cmd.none )
-        , subscriptions = subscriptions
+    Browser.application
+        { init = init
+        , onUrlRequest = ClickedLink
+        , onUrlChange = ChangedUrl
+        , subscriptions = \_ -> Sub.none
         , update = update
         , view = view
         }
