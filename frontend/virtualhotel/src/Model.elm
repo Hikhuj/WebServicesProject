@@ -34,11 +34,12 @@ type alias User =
          }
 
 type alias Reservation = 
-        { fk_usu_codigo : String
-         , fk_hab_codigo : String
-         , fk_tra_codigo : String
-         , res_fecha_ingreso : Posix 
-         , res_fecha_salida : Posix 
+        { fk_usu_codigo : Int
+         , fk_hab_codigo : Int
+         , fk_tra_codigo : Int
+         , id : Int
+         , res_fecha_ingreso : String 
+         , res_fecha_salida : String 
          , res_estado : String 
         } 
 

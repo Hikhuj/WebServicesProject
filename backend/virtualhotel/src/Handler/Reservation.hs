@@ -11,7 +11,7 @@ getReservationR reservationId = do
  mReservation <- runDB $ selectFirst [ReservacionRes_estado ==. "A", ReservacionId ==. reservationId ] []
  case mReservation of
   Just mReservation -> 
-   return $ object ["reservation" .= mReservation]
+   returnJson mReservation
   _ ->
    notFound
 

@@ -11,7 +11,7 @@ getTransportR transportId = do
  mTransport <- runDB $ selectFirst [TransporteTra_estado ==. "A", TransporteId ==. transportId ] []
  case mTransport of
   Just mTransport -> 
-   return $ object ["transport" .= mTransport]
+   returnJson mTransport
   _ ->
    notFound
 
