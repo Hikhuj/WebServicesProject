@@ -9,6 +9,8 @@ import Html.Lazy exposing (lazy)
 import Reservations
 import Rooms
 import TransportTypes
+import Transports
+import Hotels
 import Url exposing (Url)
 import Url.Parser as Parser exposing ((</>), Parser, s, string)
 
@@ -26,6 +28,8 @@ type Page
     | CreateRoomPage
     | ReservationsPage Reservations.Model
     | TransportTypesPage TransportTypes.Model
+    | TransportsPage Transports.Model
+    | HotelsPage Hotels.Model
     | NotFound
 
 
@@ -35,6 +39,8 @@ type Route
     | CreateRoom
     | Reservations
     | TransportTypes
+    | Transports
+    | Hotels
 
 
 parser : Parser (Route -> a) a
@@ -44,6 +50,8 @@ parser =
         , Parser.map Rooms (s "rooms")
         , Parser.map Reservations (s "reservations")
         , Parser.map TransportTypes (s "transport-types")
+        , Parser.map Transports (s "transports")
+        , Parser.map Hotels (s "hotels")
 
         {--, Parser.map Room (s "rooms" </> Parser.string) --}
         ]
@@ -60,9 +68,18 @@ view model =
                     Reservations.view reservations
                         |> Html.map GotReservationsMsg
 
-                TransportTypesPage reservations ->
-                    TransportTypes.view reservations
+                TransportsPage transports ->
+                        Transports.view transports
+                        |> Html.map GotTransportsMsg
+
+                HotelsPage hotels ->
+                        Hotels.view hotels
+                        |> Html.map GotHotelsMsg
+
+                TransportTypesPage transportTypes ->
+                    TransportTypes.view transportTypes
                         |> Html.map GotTransportTypesMsg
+
 
                 RoomsPage rooms ->
                     Rooms.view rooms
@@ -98,6 +115,8 @@ viewHeader page =
                 [ navLink Rooms { url = "rooms", caption = "Rooms" }
                 , navLink Reservations { url = "reservations", caption = "Reservations" }
                 , navLink TransportTypes { url = "transport-types", caption = "Transport Types" }
+                , navLink Transports { url = "transports", caption = "Transports" }
+                , navLink Hotels { url = "hotels", caption = "Hotels" }
                 ]
 
         navLink : Route -> { url : String, caption : String } -> Html msg
@@ -123,6 +142,10 @@ isActive { link, page } =
         ( Reservations , _ ) -> False
         ( TransportTypes , TransportTypesPage _ ) -> True
         ( TransportTypes , _ ) -> False
+        ( Transports , TransportsPage _ ) -> True
+        ( Transports , _ ) -> False
+        ( Hotels , HotelsPage _ ) -> True
+        ( Hotels , _ ) -> False
         _ -> False
 -- Footer View
 
@@ -138,6 +161,8 @@ type Msg
     | GotRoomsMsg Rooms.Msg
     | GotReservationsMsg Reservations.Msg
     | GotTransportTypesMsg TransportTypes.Msg
+    | GotTransportsMsg Transports.Msg
+    | GotHotelsMsg Hotels.Msg
 
 
 
@@ -146,7 +171,7 @@ type Msg
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg of
+        case Debug.log "The Msg: " msg of
 
         ClickedLink urlRequest ->
             case urlRequest of
@@ -163,6 +188,29 @@ update msg model =
             case model.page of
                 RoomsPage rooms ->
                     toRooms model (Rooms.update roomsMsg rooms)
+
+                NotFound ->
+                    ( model, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
+
+
+        GotHotelsMsg hotelsMsg ->
+            case model.page of
+                HotelsPage hotels ->
+                    toHotels model (Hotels.update hotelsMsg hotels)
+
+                NotFound ->
+                    ( model, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        GotTransportsMsg transportsMsg ->
+            case model.page of
+                TransportsPage transports ->
+                    toTransports model (Transports.update transportsMsg transports)
 
                 NotFound ->
                     ( model, Cmd.none )
@@ -216,6 +264,18 @@ toTransportTypes model ( transportTypes, cmd ) =
     , Cmd.map GotTransportTypesMsg cmd
     )
 
+toTransports : Model -> ( Transports.Model, Cmd Transports.Msg ) -> ( Model, Cmd Msg )
+toTransports model ( transports, cmd ) =
+    ( { model | page = TransportsPage transports }
+    , Cmd.map GotTransportsMsg cmd
+    )
+
+toHotels : Model -> ( Hotels.Model, Cmd Hotels.Msg ) -> ( Model, Cmd Msg )
+toHotels model ( hotels, cmd ) =
+    ( { model | page = HotelsPage hotels }
+    , Cmd.map GotHotelsMsg cmd
+    )
+
 
 -- Subscriptions
 
@@ -252,6 +312,14 @@ updateUrl url model =
         Just TransportTypes ->
             TransportTypes.init ()
                 |> toTransportTypes model
+
+        Just Transports ->
+            Transports.init ()
+                |> toTransports model
+
+        Just Hotels ->
+            Hotels.init ()
+                |> toHotels model
 
         Nothing ->
             ( { model | page = NotFound }, Cmd.none )

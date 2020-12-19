@@ -21,6 +21,7 @@ type alias Hotel =
          , hot_direccion : String 
          , hot_categoria : String 
          , hot_estado : String 
+         , id : Int 
          }
 
 type alias User = 
@@ -37,19 +38,18 @@ type alias Reservation =
         { fk_usu_codigo : Int
          , fk_hab_codigo : Int
          , fk_tra_codigo : Int
-         , id : Int
          , res_fecha_ingreso : String 
          , res_fecha_salida : String 
          , res_estado : String 
+         , id : Int
         } 
 
 type alias Transport = 
-        { fk_tip_transporte : String
+        { fk_tip_transporte : Int
          , tra_descripcion : String 
          , tra_precio : Float
          , tra_estado : String 
-         , tra_fecha_inicio : Posix 
-         , tra_fecha_fin : Posix 
+         , id : Int 
          }
 
 type alias TransportType = 

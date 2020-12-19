@@ -1,7 +1,7 @@
-{- Reservations View -}
+{- Rooms View -}
 
 
-module Reservations exposing (Model, Msg, init, update, view)
+module Rooms exposing (Model, Msg, init, update, view)
 
 -- Browser elements and sandbox
 -- Html
@@ -18,23 +18,23 @@ import Http
 import Json.Decode exposing (Decoder, bool, float, int, list, string, succeed)
 import Json.Decode.Pipeline exposing (optional, required)
 import Constants as C
-import Model exposing (Reservation)
+import Model exposing (Room)
 
 
--- Selected Reservation record constant
+-- Selected Room record constant
 -- Msg type. What we expect to get from our REST API
 
 
 type Msg
-    = GotReservations (Result Http.Error (List Reservation))
+    = GotRooms (Result Http.Error (List Room))
 
 
 view : Model -> Html Msg
 view model =
     div [ class "content" ] <|
         case model.status of
-            Loaded reservations ->
-                viewLoaded reservations
+            Loaded rooms ->
+                viewLoaded rooms
 
             Loading ->
                 [ div [ class "loadingSpinner" ]
@@ -49,58 +49,57 @@ view model =
                 [ text ("Error: " ++ errorMessage) ]
 
 
-viewLoaded : List Reservation -> List (Html Msg)
-viewLoaded reservations =
+viewLoaded : List Room -> List (Html Msg)
+viewLoaded rooms =
     [ h3 [ class "text-huge text-black text-withSubtitle" ] [ text "Virtual Hotel" ]
-    , h4 [ class "text-big text-gray m-none" ] [ text "Reservations" ] 
+    , h4 [ class "text-big text-gray m-none" ] [ text "Rooms" ] 
     , table [ class "table table--responsive" ]
         [ thead []
             [ tr []
-                [ th [] [ text "Id" ], th [] [ text "Name" ], th [] [ text "Price" ], th [] [ text "Hotel" ], th [] [ text "Reservation Capacity" ], th [] [ text "Status" ] ]
+                [ th [] [ text "Id" ], th [] [ text "Name" ], th [] [ text "Price" ], th [] [ text "Hotel" ], th [] [ text "Room Capacity" ], th [] [ text "Status" ] ]
             ]
-        , tbody [] (List.map viewReservation  reservations )
+        , tbody [] (List.map viewRoom  rooms )
         ]
 
-    {--, h3 [] [ text "Reservation Size: " ]
+    {--, h3 [] [ text "Room Size: " ]
       - , div [ id "choose-size" ] (List.map viewSizeChooser [ Small, Medium, Large ]) --}
-    {--, div [ id "reservations", class (sizeToString chosenSize) ] (List.map (viewReservation selectedUrl) rooms) --}
+    {--, div [ id "rooms", class (sizeToString chosenSize) ] (List.map (viewRoom selectedUrl) rooms) --}
     {--, img [ class "large", src (urlPrefix ++ "large/" ++ selectedUrl) ] [] --}
     ]
 
 
-viewReservation : Reservation -> Html Msg
-viewReservation reservation =
+viewRoom : Room -> Html Msg
+viewRoom room =
     tr []
-        [ td [] [ text (String.fromInt reservation.id) ]
-        , td [] [ text  (String.fromInt reservation.fk_usu_codigo) ]
-        , td [] [ text  (String.fromInt reservation.fk_hab_codigo) ]
-        , td [] [ text  (String.fromInt reservation.fk_tra_codigo) ]
-        , td [] [ text reservation.res_fecha_ingreso ]
-        , td [] [ text reservation.res_fecha_salida ]
-        , td [] [ text reservation.res_estado ]
+        [ td [] [ text (String.fromInt room.id) ]
+        , td [] [ text room.hab_descripcion ]
+        , td [] [ text (String.fromFloat room.hab_precio) ]
+        , td [] [ text (String.fromInt room.fk_hot_codigo) ]
+        , td [] [ text (String.fromInt room.hab_capacidad) ]
         , td [] [ button [ class "button button--small button--green"] [ text "View!" ], button [ class "button button--small button--primary"] [ text "Remove!" ] ]
         ]
 
 
 
 
--- Reservation decoder fromJSON
+-- Room decoder fromJSON
 
 
-reservationDecoder : Decoder Reservation
-reservationDecoder =
-    succeed Reservation
-        |> required "fk_usu_codigo" int
-        |> required "fk_hab_codigo" int
-        |> required "fk_tra_codigo" int
-        |> required "res_fecha_ingreso" string 
-        |> required "res_fecha_salida" string 
-        |> required "res_estado" string 
+roomDecoder : Decoder Room
+roomDecoder =
+    succeed Room
+        |> required "hab_capacidad" int
+        |> required "hab_descripcion" string
+        |> required "hab_estado" string
+        |> required "fk_hot_codigo" int
+        |> required "hab_numero" int
         |> required "id" int
+        |> required "hab_tipo" string
+        |> required "hab_precio" float
 
 
 type Status
-    = Loaded (List Reservation)
+    = Loaded (List Room)
     | Loading
     | Errored String
 
@@ -119,32 +118,32 @@ initialModel =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        GotReservations (Ok reservations) ->
-            case reservations of
+        GotRooms (Ok rooms) ->
+            case rooms of
                 first :: rest ->
-                    ( { model | status = Loaded reservations }, Cmd.none )
+                    ( { model | status = Loaded rooms }, Cmd.none )
 
                 [] ->
-                    ( { model | status = Errored "Ninguna Reservacion Encontrada" }, Cmd.none )
+                    ( { model | status = Errored "Ninguna Habitacion Encontrada" }, Cmd.none )
 
-        GotReservations (Err _) ->
+        GotRooms (Err _) ->
             ( { model | status = Errored "An Unknown Error Ocurred. Please Try Again Later" }, Cmd.none )
 
 
 {--Initial Command for retrieving information from server, as an HTTP GET request  --}
 
-reservationsApiUrl : String
-reservationsApiUrl = 
-        C.apiUrl ++ "reservations"
+roomsApiUrl : String
+roomsApiUrl = 
+        C.apiUrl ++ "rooms"
 
 initialCmd : Cmd Msg
 initialCmd =
     Http.request
         { method = "GET"
         , headers = [ Http.header "Authorization" ("Bearer " ++ "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqd3QiOjZ9.eVgBafOwYssLx9tn_skX3CdE7PAVNyp0oisYibH7Xss") ]
-        , url = reservationsApiUrl
+        , url = roomsApiUrl
         , body = Http.emptyBody
-        , expect = Http.expectJson GotReservations (list reservationDecoder)
+        , expect = Http.expectJson GotRooms (list roomDecoder)
         , timeout = Nothing
         , tracker = Nothing
         }

@@ -1,7 +1,7 @@
-{- Reservations View -}
+{- Transports View -}
 
 
-module Reservations exposing (Model, Msg, init, update, view)
+module Transports exposing (Model, Msg, init, update, view)
 
 -- Browser elements and sandbox
 -- Html
@@ -18,23 +18,23 @@ import Http
 import Json.Decode exposing (Decoder, bool, float, int, list, string, succeed)
 import Json.Decode.Pipeline exposing (optional, required)
 import Constants as C
-import Model exposing (Reservation)
+import Model exposing (Transport)
 
 
--- Selected Reservation record constant
+-- Selected Transport record constant
 -- Msg type. What we expect to get from our REST API
 
 
 type Msg
-    = GotReservations (Result Http.Error (List Reservation))
+    = GotTransports (Result Http.Error (List Transport))
 
 
 view : Model -> Html Msg
 view model =
     div [ class "content" ] <|
         case model.status of
-            Loaded reservations ->
-                viewLoaded reservations
+            Loaded transports ->
+                viewLoaded transports
 
             Loading ->
                 [ div [ class "loadingSpinner" ]
@@ -49,58 +49,54 @@ view model =
                 [ text ("Error: " ++ errorMessage) ]
 
 
-viewLoaded : List Reservation -> List (Html Msg)
-viewLoaded reservations =
+viewLoaded : List Transport -> List (Html Msg)
+viewLoaded transports =
     [ h3 [ class "text-huge text-black text-withSubtitle" ] [ text "Virtual Hotel" ]
-    , h4 [ class "text-big text-gray m-none" ] [ text "Reservations" ] 
+    , h4 [ class "text-big text-gray m-none" ] [ text "Transports" ] 
     , table [ class "table table--responsive" ]
         [ thead []
             [ tr []
-                [ th [] [ text "Id" ], th [] [ text "Name" ], th [] [ text "Price" ], th [] [ text "Hotel" ], th [] [ text "Reservation Capacity" ], th [] [ text "Status" ] ]
+                [ th [] [ text "Id" ], th [] [ text "Name" ], th [] [ text "Price" ], th [] [ text "Status" ]  ]
             ]
-        , tbody [] (List.map viewReservation  reservations )
+        , tbody [] (List.map viewTransport  transports )
         ]
 
-    {--, h3 [] [ text "Reservation Size: " ]
+    {--, h3 [] [ text "Transport Size: " ]
       - , div [ id "choose-size" ] (List.map viewSizeChooser [ Small, Medium, Large ]) --}
-    {--, div [ id "reservations", class (sizeToString chosenSize) ] (List.map (viewReservation selectedUrl) rooms) --}
+    {--, div [ id "transports", class (sizeToString chosenSize) ] (List.map (viewTransport selectedUrl) transports) --}
     {--, img [ class "large", src (urlPrefix ++ "large/" ++ selectedUrl) ] [] --}
     ]
 
 
-viewReservation : Reservation -> Html Msg
-viewReservation reservation =
+viewTransport : Transport -> Html Msg
+viewTransport transport =
     tr []
-        [ td [] [ text (String.fromInt reservation.id) ]
-        , td [] [ text  (String.fromInt reservation.fk_usu_codigo) ]
-        , td [] [ text  (String.fromInt reservation.fk_hab_codigo) ]
-        , td [] [ text  (String.fromInt reservation.fk_tra_codigo) ]
-        , td [] [ text reservation.res_fecha_ingreso ]
-        , td [] [ text reservation.res_fecha_salida ]
-        , td [] [ text reservation.res_estado ]
+        [ td [] [ text (String.fromInt transport.id) ]
+        , td [] [ text transport.tra_descripcion ]
+        , td [] [ text (String.fromFloat transport.tra_precio) ]
+        , td [] [ text transport.tra_estado ]
         , td [] [ button [ class "button button--small button--green"] [ text "View!" ], button [ class "button button--small button--primary"] [ text "Remove!" ] ]
         ]
 
 
 
 
--- Reservation decoder fromJSON
+-- Transport decoder fromJSON
 
 
-reservationDecoder : Decoder Reservation
-reservationDecoder =
-    succeed Reservation
-        |> required "fk_usu_codigo" int
-        |> required "fk_hab_codigo" int
-        |> required "fk_tra_codigo" int
-        |> required "res_fecha_ingreso" string 
-        |> required "res_fecha_salida" string 
-        |> required "res_estado" string 
-        |> required "id" int
+transportDecoder : Decoder Transport
+transportDecoder =
+    succeed Transport
+        |> required "fk_tip_transporte" int
+        |> required "tra_descripcion"  string 
+        |> required "tra_precio"  float
+        |> required "tra_estado"  string 
+        |> required "id"  int 
+         
 
 
 type Status
-    = Loaded (List Reservation)
+    = Loaded (List Transport)
     | Loading
     | Errored String
 
@@ -119,32 +115,32 @@ initialModel =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        GotReservations (Ok reservations) ->
-            case reservations of
+        GotTransports (Ok transports) ->
+            case transports of
                 first :: rest ->
-                    ( { model | status = Loaded reservations }, Cmd.none )
+                    ( { model | status = Loaded transports }, Cmd.none )
 
                 [] ->
-                    ( { model | status = Errored "Ninguna Reservacion Encontrada" }, Cmd.none )
+                    ( { model | status = Errored "Ninguna Habitacion Encontrada" }, Cmd.none )
 
-        GotReservations (Err _) ->
+        GotTransports (Err _) ->
             ( { model | status = Errored "An Unknown Error Ocurred. Please Try Again Later" }, Cmd.none )
 
 
 {--Initial Command for retrieving information from server, as an HTTP GET request  --}
 
-reservationsApiUrl : String
-reservationsApiUrl = 
-        C.apiUrl ++ "reservations"
+transportsApiUrl : String
+transportsApiUrl = 
+        C.apiUrl ++ "transports"
 
 initialCmd : Cmd Msg
 initialCmd =
     Http.request
         { method = "GET"
         , headers = [ Http.header "Authorization" ("Bearer " ++ "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqd3QiOjZ9.eVgBafOwYssLx9tn_skX3CdE7PAVNyp0oisYibH7Xss") ]
-        , url = reservationsApiUrl
+        , url = transportsApiUrl
         , body = Http.emptyBody
-        , expect = Http.expectJson GotReservations (list reservationDecoder)
+        , expect = Http.expectJson GotTransports (list transportDecoder)
         , timeout = Nothing
         , tracker = Nothing
         }

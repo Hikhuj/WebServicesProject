@@ -1,7 +1,7 @@
-{- Reservations View -}
+{- Hotels View -}
 
 
-module Reservations exposing (Model, Msg, init, update, view)
+module Hotels exposing (Model, Msg, init, update, view)
 
 -- Browser elements and sandbox
 -- Html
@@ -18,23 +18,23 @@ import Http
 import Json.Decode exposing (Decoder, bool, float, int, list, string, succeed)
 import Json.Decode.Pipeline exposing (optional, required)
 import Constants as C
-import Model exposing (Reservation)
+import Model exposing (Hotel)
 
 
--- Selected Reservation record constant
+-- Selected Hotel record constant
 -- Msg type. What we expect to get from our REST API
 
 
 type Msg
-    = GotReservations (Result Http.Error (List Reservation))
+    = GotHotels (Result Http.Error (List Hotel))
 
 
 view : Model -> Html Msg
 view model =
     div [ class "content" ] <|
         case model.status of
-            Loaded reservations ->
-                viewLoaded reservations
+            Loaded hotels ->
+                viewLoaded hotels
 
             Loading ->
                 [ div [ class "loadingSpinner" ]
@@ -49,58 +49,60 @@ view model =
                 [ text ("Error: " ++ errorMessage) ]
 
 
-viewLoaded : List Reservation -> List (Html Msg)
-viewLoaded reservations =
+viewLoaded : List Hotel -> List (Html Msg)
+viewLoaded hotels =
     [ h3 [ class "text-huge text-black text-withSubtitle" ] [ text "Virtual Hotel" ]
-    , h4 [ class "text-big text-gray m-none" ] [ text "Reservations" ] 
+    , h4 [ class "text-big text-gray m-none" ] [ text "Hotels" ] 
     , table [ class "table table--responsive" ]
         [ thead []
             [ tr []
-                [ th [] [ text "Id" ], th [] [ text "Name" ], th [] [ text "Price" ], th [] [ text "Hotel" ], th [] [ text "Reservation Capacity" ], th [] [ text "Status" ] ]
+                [ th [] [ text "Id" ], th [] [ text "Name" ], th [] [ text "Phone" ], th [] [ text "Email" ], th [] [ text "Address" ], th [] [ text "Category" ], th [] [ text "Status" ] ]
             ]
-        , tbody [] (List.map viewReservation  reservations )
+        , tbody [] (List.map viewHotel  hotels )
         ]
 
-    {--, h3 [] [ text "Reservation Size: " ]
+    {--, h3 [] [ text "Hotel Size: " ]
       - , div [ id "choose-size" ] (List.map viewSizeChooser [ Small, Medium, Large ]) --}
-    {--, div [ id "reservations", class (sizeToString chosenSize) ] (List.map (viewReservation selectedUrl) rooms) --}
+    {--, div [ id "hotels", class (sizeToString chosenSize) ] (List.map (viewHotel selectedUrl) hotels) --}
     {--, img [ class "large", src (urlPrefix ++ "large/" ++ selectedUrl) ] [] --}
     ]
 
 
-viewReservation : Reservation -> Html Msg
-viewReservation reservation =
+viewHotel : Hotel -> Html Msg
+viewHotel hotel =
     tr []
-        [ td [] [ text (String.fromInt reservation.id) ]
-        , td [] [ text  (String.fromInt reservation.fk_usu_codigo) ]
-        , td [] [ text  (String.fromInt reservation.fk_hab_codigo) ]
-        , td [] [ text  (String.fromInt reservation.fk_tra_codigo) ]
-        , td [] [ text reservation.res_fecha_ingreso ]
-        , td [] [ text reservation.res_fecha_salida ]
-        , td [] [ text reservation.res_estado ]
+        [ td [] [ text (String.fromInt hotel.id) ]
+        , td [] [ text hotel.hot_nombre ]
+        , td [] [ text hotel.hot_telefono ]
+        , td [] [ text hotel.hot_email ]
+        , td [] [ text hotel.hot_direccion ]
+        , td [] [ text hotel.hot_categoria ]
+        , td [] [ text hotel.hot_estado ]
         , td [] [ button [ class "button button--small button--green"] [ text "View!" ], button [ class "button button--small button--primary"] [ text "Remove!" ] ]
         ]
 
 
 
 
--- Reservation decoder fromJSON
+-- Hotel decoder fromJSON
 
 
-reservationDecoder : Decoder Reservation
-reservationDecoder =
-    succeed Reservation
-        |> required "fk_usu_codigo" int
-        |> required "fk_hab_codigo" int
-        |> required "fk_tra_codigo" int
-        |> required "res_fecha_ingreso" string 
-        |> required "res_fecha_salida" string 
-        |> required "res_estado" string 
-        |> required "id" int
+hotelDecoder : Decoder Hotel
+hotelDecoder =
+    succeed Hotel
+        |> required "hot_nombre" string 
+        |> required "hot_telefono" string 
+        |> required "hot_email" string 
+        |> required "hot_direccion" string 
+        |> required "hot_categoria" string 
+        |> required "hot_estado" string 
+        |> required "id" int 
+         
+
 
 
 type Status
-    = Loaded (List Reservation)
+    = Loaded (List Hotel)
     | Loading
     | Errored String
 
@@ -119,32 +121,32 @@ initialModel =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        GotReservations (Ok reservations) ->
-            case reservations of
+        GotHotels (Ok hotels) ->
+            case hotels of
                 first :: rest ->
-                    ( { model | status = Loaded reservations }, Cmd.none )
+                    ( { model | status = Loaded hotels }, Cmd.none )
 
                 [] ->
-                    ( { model | status = Errored "Ninguna Reservacion Encontrada" }, Cmd.none )
+                    ( { model | status = Errored "Ninguna Habitacion Encontrada" }, Cmd.none )
 
-        GotReservations (Err _) ->
+        GotHotels (Err _) ->
             ( { model | status = Errored "An Unknown Error Ocurred. Please Try Again Later" }, Cmd.none )
 
 
 {--Initial Command for retrieving information from server, as an HTTP GET request  --}
 
-reservationsApiUrl : String
-reservationsApiUrl = 
-        C.apiUrl ++ "reservations"
+hotelsApiUrl : String
+hotelsApiUrl = 
+        C.apiUrl ++ "hotels"
 
 initialCmd : Cmd Msg
 initialCmd =
     Http.request
         { method = "GET"
         , headers = [ Http.header "Authorization" ("Bearer " ++ "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqd3QiOjZ9.eVgBafOwYssLx9tn_skX3CdE7PAVNyp0oisYibH7Xss") ]
-        , url = reservationsApiUrl
+        , url = hotelsApiUrl
         , body = Http.emptyBody
-        , expect = Http.expectJson GotReservations (list reservationDecoder)
+        , expect = Http.expectJson GotHotels (list hotelDecoder)
         , timeout = Nothing
         , tracker = Nothing
         }
