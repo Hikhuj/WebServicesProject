@@ -14,5 +14,6 @@ postHotelsR :: Handler Value
 postHotelsR = do
  newHotel <- requireCheckJsonBody :: Handler Hotel
  runDB $ insert newHotel
- sendStatusJSON created201 newHotel
+ hotels <- runDB $ selectList [HotelHot_estado ==. "A"] [Asc HotelId]
+ sendStatusJSON created201 hotels
 

@@ -17,5 +17,7 @@ postUsersR :: Handler Value
 postUsersR = do
  newUser <- requireCheckJsonBody :: Handler Usuario
  _ <- runDB $ insert newUser
- sendStatusJSON created201 newUser
+ users <- runDB $ selectList [UsuarioUsu_estado ==. "A"] [Asc UsuarioId]
+ sendStatusJSON created201 users
+
 

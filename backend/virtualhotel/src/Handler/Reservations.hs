@@ -14,5 +14,6 @@ postReservationsR :: Handler Value
 postReservationsR = do
  newReservation <- requireCheckJsonBody :: Handler Reservacion
  runDB $ insert newReservation
- sendStatusJSON created201 newReservation
+ reservations <- runDB $ selectList [ReservacionRes_estado ==. "A"] [Asc ReservacionId]
+ sendStatusJSON created201 reservations
 

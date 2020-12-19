@@ -14,5 +14,6 @@ postTransportsR :: Handler Value
 postTransportsR = do
  newTransport <- requireCheckJsonBody :: Handler Transporte
  _ <- runDB $ insert newTransport
- sendStatusJSON created201 newTransport
+ transports <- runDB $ selectList [TransporteTra_estado ==. "A"] [Asc TransporteId]
+ sendStatusJSON created201 transports
 

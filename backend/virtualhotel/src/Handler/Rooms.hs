@@ -15,5 +15,6 @@ postRoomsR :: Handler Value
 postRoomsR = do
  newRoom <- requireCheckJsonBody :: Handler Habitacion
  runDB $ insert newRoom
- sendStatusJSON created201 (object ["New Room" .= newRoom])
+ rooms <- runDB $ selectList [HabitacionHab_estado ==. "A"] [Asc HabitacionId]
+ sendStatusJSON created201 rooms
 
