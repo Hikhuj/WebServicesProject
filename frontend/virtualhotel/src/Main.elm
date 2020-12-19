@@ -4,7 +4,7 @@ import Browser exposing (Document)
 import Browser.Navigation as Nav
 import Hotels
 import Html exposing (Html, a, footer, h1, li, nav, text, ul)
-import Html.Attributes exposing (classList, href)
+import Html.Attributes exposing (style, class, classList, href)
 import Html.Events exposing (onClick)
 import Html.Lazy exposing (lazy)
 import Reservations
@@ -117,18 +117,18 @@ viewHeader page =
             h1 [] [ text "Virtual Hotel" ]
 
         links =
-            ul []
-                [ navLink Rooms { url = "rooms", caption = "Rooms" }
-                , navLink Reservations { url = "reservations", caption = "Reservations" }
-                , navLink TransportTypes { url = "transport-types", caption = "Transport Types" }
-                , navLink Transports { url = "transports", caption = "Transports" }
-                , navLink Users { url = "users", caption = "Users" }
-                , navLink Hotels { url = "hotels", caption = "Hotels" }
+            ul [class "navbar"]
+                [ navLink Rooms { url = "rooms", caption = "Rooms " }
+                , navLink Reservations { url = "reservations", caption = "Reservations " }
+                , navLink TransportTypes { url = "transport-types", caption = "Transport Types " }
+                , navLink Transports { url = "transports", caption = "Transports " }
+                , navLink Users { url = "users", caption = "Users " }
+                , navLink Hotels { url = "hotels", caption = "Hotels " }
                 ]
 
         navLink : Route -> { url : String, caption : String } -> Html msg
         navLink route { url, caption } =
-            li [ classList [ ( "tabs-item is-selected", isActive { link = route, page = page } ) ] ]
+            li [ style "display" "inline", classList [ ( "tabs-item is-selected", isActive { link = route, page = page } ) ] ]
                 [ a [ href url ] [ text caption ] ]
     in
     nav [] [ logo, links ]
