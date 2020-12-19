@@ -25,7 +25,7 @@ patchRoomR roomId = do
  mRoomId <- runDB $ get roomId
  case mRoomId of
   Just mRoomId ->
-   runDB $ update roomId [HabitacionHab_estado =. "E"]
+   deleteRoom roomId
   _ -> 
    notFound
  return $ object ["message" .= String "Deleted"]
@@ -38,3 +38,8 @@ putRoomR roomId = do
  runDB $ replace roomId newRoom 
  return $ object ["room" .= newRoom]
 
+deleteRoom :: Key Habitacion -> Handler Value
+deleteRoom roomId = do
+ runDB $ update roomId [HabitacionHab_estado =. "E"]
+ rooms <- runDB $ selectList [HabitacionHab_estado ==. "A"] [Asc HabitacionId]
+ sendStatusJSON ok200 rooms
