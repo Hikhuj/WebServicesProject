@@ -1,7 +1,7 @@
-{- Rooms View -}
+{- Users View -}
 
 
-module Rooms exposing (Model, Msg, init, update, view)
+module Users exposing (Model, Msg, init, update, view)
 
 -- Browser elements and sandbox
 -- Html
@@ -18,23 +18,23 @@ import Http
 import Json.Decode exposing (Decoder, bool, float, int, list, string, succeed)
 import Json.Decode.Pipeline exposing (optional, required)
 import Constants as C
-import Model exposing (Room)
+import Model exposing (User)
 
 
--- Selected Room record constant
+-- Selected User record constant
 -- Msg type. What we expect to get from our REST API
 
 
 type Msg
-    = GotRooms (Result Http.Error (List Room))
+    = GotUsers (Result Http.Error (List User))
 
 
 view : Model -> Html Msg
 view model =
     div [ class "content" ] <|
         case model.status of
-            Loaded rooms ->
-                viewLoaded rooms
+            Loaded users ->
+                viewLoaded users
 
             Loading ->
                 [ div [ class "loadingSpinner" ]
@@ -49,57 +49,61 @@ view model =
                 [ text ("Error: " ++ errorMessage) ]
 
 
-viewLoaded : List Room -> List (Html Msg)
-viewLoaded rooms =
+viewLoaded : List User -> List (Html Msg)
+viewLoaded users =
     [ h3 [ class "text-huge text-black text-withSubtitle" ] [ text "Virtual Hotel" ]
-    , h4 [ class "text-big text-gray m-none" ] [ text "Rooms" ] 
+    , h4 [ class "text-big text-gray m-none" ] [ text "Users" ] 
     , table [ class "table table--responsive" ]
         [ thead []
             [ tr []
-                [ th [] [ text "Id" ], th [] [ text "Name" ], th [] [ text "Price" ], th [] [ text "Hotel" ], th [] [ text "Room Capacity" ], th [] [ text "Status" ] ]
+                [ th [] [ text "Id" ], th [] [ text "Name" ], th [] [ text "User Identification" ], th [] [ text "Email" ], th [] [ text "Birth Date" ], th [] [ text "Phone" ], th [] [ text "Status" ] ]
             ]
-        , tbody [] (List.map viewRoom  rooms )
+        , tbody [] (List.map viewUser  users )
         ]
 
-    {--, h3 [] [ text "Room Size: " ]
+    {--, h3 [] [ text "User Size: " ]
       - , div [ id "choose-size" ] (List.map viewSizeChooser [ Small, Medium, Large ]) --}
-    {--, div [ id "rooms", class (sizeToString chosenSize) ] (List.map (viewRoom selectedUrl) rooms) --}
+    {--, div [ id "users", class (sizeToString chosenSize) ] (List.map (viewUser selectedUrl) users) --}
     {--, img [ class "large", src (urlPrefix ++ "large/" ++ selectedUrl) ] [] --}
     ]
 
 
-viewRoom : Room -> Html Msg
-viewRoom room =
+viewUser : User -> Html Msg
+viewUser user =
     tr []
-        [ td [] [ text (String.fromInt room.id) ]
-        , td [] [ text room.hab_descripcion ]
-        , td [] [ text (String.fromFloat room.hab_precio) ]
-        , td [] [ text (String.fromInt room.fk_hot_codigo) ]
-        , td [] [ text (String.fromInt room.hab_capacidad) ]
+        [ td [] [ text (String.fromInt user.id) ]
+        , td [] [ text user.usu_nombre ]
+        , td [] [ text user.usu_identificacion ]
+        , td [] [ text user.usu_email ]
+        , td [] [ text user.usu_fec_nac ]
+        , td [] [ text user.usu_telefono]
+        , td [] [ text user.usu_estado ]
         , td [] [ button [ class "button button--small button--green"] [ text "View!" ], button [ class "button button--small button--primary"] [ text "Remove!" ] ]
         ]
 
 
 
 
--- Room decoder fromJSON
+-- User decoder fromJSON
 
 
-roomDecoder : Decoder Room
-roomDecoder =
-    succeed Room
-        |> required "hab_capacidad" int
-        |> required "hab_descripcion" string
-        |> required "hab_estado" string
-        |> required "fk_hot_codigo" int
-        |> required "hab_numero" int
-        |> required "id" int
-        |> required "hab_tipo" string
-        |> required "hab_precio" float
+userDecoder : Decoder User
+userDecoder =
+    succeed User
+        |> required "usu_nombre" string 
+        |> required "usu_identificacion" string 
+        |> required "usu_password" string 
+        |> required "usu_email" string 
+        |> required "usu_estado" string 
+        |> required "usu_fec_nac" string 
+        |> required "usu_telefono" string 
+        |> required "id" int 
+         
+
 
 
 type Status
-    = Loaded (List Room)
+    = Loaded (List User)
     | Loading
     | Errored String
 
@@ -118,32 +122,32 @@ initialModel =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        GotRooms (Ok rooms) ->
-            case rooms of
+        GotUsers (Ok users) ->
+            case users of
                 first :: rest ->
-                    ( { model | status = Loaded rooms }, Cmd.none )
+                    ( { model | status = Loaded users }, Cmd.none )
 
                 [] ->
-                    ( { model | status = Errored "Ninguna Habitacion Encontrada" }, Cmd.none )
+                    ( { model | status = Errored "Ningun Usuario Encontrado" }, Cmd.none )
 
-        GotRooms (Err _) ->
+        GotUsers (Err _) ->
             ( { model | status = Errored "An Unknown Error Ocurred. Please Try Again Later" }, Cmd.none )
 
 
 {--Initial Command for retrieving information from server, as an HTTP GET request  --}
 
-roomsApiUrl : String
-roomsApiUrl = 
-        C.apiUrl ++ "rooms"
+usersApiUrl : String
+usersApiUrl = 
+        C.apiUrl ++ "users"
 
 initialCmd : Cmd Msg
 initialCmd =
     Http.request
         { method = "GET"
         , headers = [ Http.header "Authorization" ("Bearer " ++ "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqd3QiOjZ9.eVgBafOwYssLx9tn_skX3CdE7PAVNyp0oisYibH7Xss") ]
-        , url = roomsApiUrl
+        , url = usersApiUrl
         , body = Http.emptyBody
-        , expect = Http.expectJson GotRooms (list roomDecoder)
+        , expect = Http.expectJson GotUsers (list userDecoder)
         , timeout = Nothing
         , tracker = Nothing
         }

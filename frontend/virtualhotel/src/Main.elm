@@ -2,6 +2,7 @@ module Main exposing (main)
 
 import Browser exposing (Document)
 import Browser.Navigation as Nav
+import Hotels
 import Html exposing (Html, a, footer, h1, li, nav, text, ul)
 import Html.Attributes exposing (classList, href)
 import Html.Events exposing (onClick)
@@ -10,9 +11,9 @@ import Reservations
 import Rooms
 import TransportTypes
 import Transports
-import Hotels
 import Url exposing (Url)
 import Url.Parser as Parser exposing ((</>), Parser, s, string)
+import Users
 
 
 type alias Model =
@@ -29,6 +30,7 @@ type Page
     | ReservationsPage Reservations.Model
     | TransportTypesPage TransportTypes.Model
     | TransportsPage Transports.Model
+    | UsersPage Users.Model
     | HotelsPage Hotels.Model
     | NotFound
 
@@ -40,6 +42,7 @@ type Route
     | Reservations
     | TransportTypes
     | Transports
+    | Users
     | Hotels
 
 
@@ -51,6 +54,7 @@ parser =
         , Parser.map Reservations (s "reservations")
         , Parser.map TransportTypes (s "transport-types")
         , Parser.map Transports (s "transports")
+        , Parser.map Users (s "users")
         , Parser.map Hotels (s "hotels")
 
         {--, Parser.map Room (s "rooms" </> Parser.string) --}
@@ -61,25 +65,26 @@ view : Model -> Document Msg
 view model =
     let
         content =
-
             case Debug.log "The Page says: " model.page of
-
                 ReservationsPage reservations ->
                     Reservations.view reservations
                         |> Html.map GotReservationsMsg
 
                 TransportsPage transports ->
-                        Transports.view transports
+                    Transports.view transports
                         |> Html.map GotTransportsMsg
 
+                UsersPage users ->
+                    Users.view users
+                        |> Html.map GotUsersMsg
+
                 HotelsPage hotels ->
-                        Hotels.view hotels
+                    Hotels.view hotels
                         |> Html.map GotHotelsMsg
 
                 TransportTypesPage transportTypes ->
                     TransportTypes.view transportTypes
                         |> Html.map GotTransportTypesMsg
-
 
                 RoomsPage rooms ->
                     Rooms.view rooms
@@ -87,6 +92,7 @@ view model =
 
                 NotFound ->
                     h1 [] [ text "Not Found" ]
+
                 _ ->
                     h1 [] [ text "An Unknown Error Has Occurred. Please Contact the Administrator" ]
     in
@@ -116,11 +122,12 @@ viewHeader page =
                 , navLink Reservations { url = "reservations", caption = "Reservations" }
                 , navLink TransportTypes { url = "transport-types", caption = "Transport Types" }
                 , navLink Transports { url = "transports", caption = "Transports" }
+                , navLink Users { url = "users", caption = "Users" }
                 , navLink Hotels { url = "hotels", caption = "Hotels" }
                 ]
 
         navLink : Route -> { url : String, caption : String } -> Html msg
-        navLink route { url, caption }  =
+        navLink route { url, caption } =
             li [ classList [ ( "tabs-item is-selected", isActive { link = route, page = page } ) ] ]
                 [ a [ href url ] [ text caption ] ]
     in
@@ -133,20 +140,53 @@ isActive { link, page } =
         ( Rooms, RoomsPage _ ) ->
             True
 
-        ( Rooms, RoomPage _ ) -> True
-        ( Rooms, ModifyRoomPage _ ) -> True
-        ( Rooms, CreateRoomPage  ) -> True
+        ( Rooms, RoomPage _ ) ->
+            True
+
+        ( Rooms, ModifyRoomPage _ ) ->
+            True
+
+        ( Rooms, CreateRoomPage ) ->
+            True
+
         ( Rooms, _ ) ->
             False
-        ( Reservations , ReservationsPage _ ) -> True
-        ( Reservations , _ ) -> False
-        ( TransportTypes , TransportTypesPage _ ) -> True
-        ( TransportTypes , _ ) -> False
-        ( Transports , TransportsPage _ ) -> True
-        ( Transports , _ ) -> False
-        ( Hotels , HotelsPage _ ) -> True
-        ( Hotels , _ ) -> False
-        _ -> False
+
+        ( Reservations, ReservationsPage _ ) ->
+            True
+
+        ( Reservations, _ ) ->
+            False
+
+        ( TransportTypes, TransportTypesPage _ ) ->
+            True
+
+        ( TransportTypes, _ ) ->
+            False
+
+        ( Users, UsersPage _ ) ->
+            True
+
+        ( Users, _ ) ->
+            False
+
+        ( Transports, TransportsPage _ ) ->
+            True
+
+        ( Transports, _ ) ->
+            False
+
+        ( Hotels, HotelsPage _ ) ->
+            True
+
+        ( Hotels, _ ) ->
+            False
+
+        _ ->
+            False
+
+
+
 -- Footer View
 
 
@@ -162,6 +202,7 @@ type Msg
     | GotReservationsMsg Reservations.Msg
     | GotTransportTypesMsg TransportTypes.Msg
     | GotTransportsMsg Transports.Msg
+    | GotUsersMsg Users.Msg
     | GotHotelsMsg Hotels.Msg
 
 
@@ -171,12 +212,11 @@ type Msg
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-        case Debug.log "The Msg: " msg of
-
+    case Debug.log "The Msg: " msg of
         ClickedLink urlRequest ->
             case urlRequest of
                 Browser.External href ->
-                    (model, Nav.load href)
+                    ( model, Nav.load href )
 
                 Browser.Internal url ->
                     ( model, Nav.pushUrl model.key (Url.toString url) )
@@ -195,11 +235,21 @@ update msg model =
                 _ ->
                     ( model, Cmd.none )
 
-
         GotHotelsMsg hotelsMsg ->
             case model.page of
                 HotelsPage hotels ->
                     toHotels model (Hotels.update hotelsMsg hotels)
+
+                NotFound ->
+                    ( model, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        GotUsersMsg usersMsg ->
+            case model.page of
+                UsersPage users ->
+                    toUsers model (Users.update usersMsg users)
 
                 NotFound ->
                     ( model, Cmd.none )
@@ -241,6 +291,7 @@ update msg model =
                     ( model, Cmd.none )
 
 
+
 -- toRooms view updater
 
 
@@ -264,17 +315,27 @@ toTransportTypes model ( transportTypes, cmd ) =
     , Cmd.map GotTransportTypesMsg cmd
     )
 
+
+toUsers : Model -> ( Users.Model, Cmd Users.Msg ) -> ( Model, Cmd Msg )
+toUsers model ( users, cmd ) =
+    ( { model | page = UsersPage users }
+    , Cmd.map GotUsersMsg cmd
+    )
+
+
 toTransports : Model -> ( Transports.Model, Cmd Transports.Msg ) -> ( Model, Cmd Msg )
 toTransports model ( transports, cmd ) =
     ( { model | page = TransportsPage transports }
     , Cmd.map GotTransportsMsg cmd
     )
 
+
 toHotels : Model -> ( Hotels.Model, Cmd Hotels.Msg ) -> ( Model, Cmd Msg )
 toHotels model ( hotels, cmd ) =
     ( { model | page = HotelsPage hotels }
     , Cmd.map GotHotelsMsg cmd
     )
+
 
 
 -- Subscriptions
@@ -317,12 +378,18 @@ updateUrl url model =
             Transports.init ()
                 |> toTransports model
 
+
+        Just Users ->
+            Users.init ()
+                |> toUsers model
+
         Just Hotels ->
             Hotels.init ()
                 |> toHotels model
 
         Nothing ->
             ( { model | page = NotFound }, Cmd.none )
+
         _ ->
             ( { model | page = NotFound }, Cmd.none )
 

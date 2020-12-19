@@ -30,8 +30,9 @@ type alias User =
          , usu_password : String 
          , usu_email : String 
          , usu_estado : String 
-         , usu_fec_nac : Posix 
+         , usu_fec_nac : String 
          , usu_telefono : String 
+         , id : Int 
          }
 
 type alias Reservation = 
