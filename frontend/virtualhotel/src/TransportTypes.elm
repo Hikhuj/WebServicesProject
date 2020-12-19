@@ -27,6 +27,7 @@ import Model exposing (TransportType)
 
 type Msg
     = GotTransportTypes (Result Http.Error (List TransportType))
+    | DeleteTransportType Int
 
 
 view : Model -> Html Msg
@@ -74,7 +75,7 @@ viewTransportType transportType =
         [ td [] [ text (String.fromInt transportType.id) ]
         , td [] [ text transportType.tip_descripcion ]
         , td [] [ text transportType.tip_estado ]
-        , td [] [ button [ class "button button--small button--green"] [ text "View!" ], button [ class "button button--small button--primary"] [ text "Remove!" ] ]
+        , td [] [ button [ class "button button--small button--green"] [ text "View!" ], button [ onClick (DeleteTransportType transportType.id), class "button button--small button--primary"] [ text "Remove!" ] ]
         ]
 
 
@@ -112,6 +113,10 @@ initialModel =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+
+        DeleteTransportType transportTypeId ->
+            ( model, deleteCmd transportTypeId  )
+
         GotTransportTypes (Ok transportTypes) ->
             case transportTypes of
                 first :: rest ->
@@ -136,6 +141,20 @@ initialCmd =
         { method = "GET"
         , headers = [ Http.header "Authorization" ("Bearer " ++ "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqd3QiOjZ9.eVgBafOwYssLx9tn_skX3CdE7PAVNyp0oisYibH7Xss") ]
         , url = transportTypesApiUrl
+        , body = Http.emptyBody
+        , expect = Http.expectJson GotTransportTypes (list transportTypeDecoder)
+        , timeout = Nothing
+        , tracker = Nothing
+        }
+
+{-- PATCH / DELETE COMMAND  --}
+
+deleteCmd : Int -> Cmd Msg
+deleteCmd transportTypeId =
+    Http.request
+        { method = "PATCH"
+        , headers = [ Http.header "Authorization" ("Bearer " ++ "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqd3QiOjZ9.eVgBafOwYssLx9tn_skX3CdE7PAVNyp0oisYibH7Xss") ]
+        , url = transportTypesApiUrl ++ "/" ++ String.fromInt transportTypeId
         , body = Http.emptyBody
         , expect = Http.expectJson GotTransportTypes (list transportTypeDecoder)
         , timeout = Nothing
