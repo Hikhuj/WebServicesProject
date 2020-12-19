@@ -13,13 +13,14 @@ module TransportTypes exposing (Model, Msg, init, update, view)
 import Browser
 import Constants as C
 import Html exposing (..)
-import Html.Attributes exposing (class, classList, id, name, src, title, type_, placeholder, value)
+import Html.Attributes exposing (class, classList, id, name, placeholder, src, title, type_, value, disabled)
 import Html.Events exposing (onClick, onInput)
 import Http
 import Json.Decode exposing (Decoder, bool, float, int, list, string, succeed)
 import Json.Decode.Pipeline exposing (optional, required)
-import Model exposing (TransportType, encodeTransportType)
 import Json.Encode as Encode
+import Model exposing (TransportType, encodeTransportType)
+
 
 
 -- Selected TransportType record constant
@@ -58,17 +59,27 @@ view model =
 
 viewPostForm : Model -> Html Msg
 viewPostForm model =
-    div [ class "container" ] [
-            label [ class "label" ] [ text "Name" ]
-            , div [class "input input-fullWidth"] [
-                    viewInput "text" "Transport Type.." model.transportTypeDescription TransportTypeDescription
-                    ]
-                    , button [ onClick (CreateTransportType ) , class "button button--small button--green" ] [ text "Create!" ]
+    div [ class "container" ]
+        [ label [ class "label" ] [ text "Name" ]
+        , div [ class "input input-fullWidth" ]
+            [ viewInput "text" "Transport Type.." model.transportTypeDescription TransportTypeDescription
             ]
+        , viewButton (String.length (String.trim model.transportTypeDescription))
+        ]
+
 
 viewInput : String -> String -> String -> (String -> msg) -> Html msg
 viewInput ty plc val toMsg =
-  input [ type_ ty, placeholder plc, value val, onInput toMsg ] []
+    input [ type_ ty, placeholder plc, value val, onInput toMsg ] []
+
+
+viewButton : Int -> Html Msg
+viewButton inputLength =
+    if inputLength > 0 then
+        button [ disabled False, onClick CreateTransportType, class "button button--small button--green" ] [ text "Create!" ]
+    else
+        div [][]
+
 
 viewLoaded : List TransportType -> List (Html Msg)
 viewLoaded transportTypes =
@@ -119,8 +130,8 @@ type Status
 
 type alias Model =
     { status : Status
-     , selectedTransportType : Maybe Int
-     , transportTypeDescription : String
+    , selectedTransportType : Maybe Int
+    , transportTypeDescription : String
     }
 
 
@@ -135,14 +146,11 @@ initialModel =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-
         TransportTypeDescription newTransportTypeDescription ->
-            ( { model | transportTypeDescription = newTransportTypeDescription }, Cmd.none)
-
+            ( { model | transportTypeDescription = newTransportTypeDescription }, Cmd.none )
 
         CreateTransportType ->
             ( model, postCmd model )
-
 
         DeleteTransportType transportTypeId ->
             ( model, deleteCmd transportTypeId )
@@ -181,7 +189,10 @@ initialCmd =
         }
 
 
-{-- CREATE / POST  --}
+
+{--CREATE / POST  --}
+
+
 postCmd : Model -> Cmd Msg
 postCmd model =
     Http.request
