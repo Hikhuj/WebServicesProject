@@ -27,6 +27,7 @@ import Model exposing (Room)
 
 type Msg
     = GotRooms (Result Http.Error (List Room))
+    | DeleteRoom Int
 
 
 view : Model -> Html Msg
@@ -76,7 +77,7 @@ viewRoom room =
         , td [] [ text (String.fromFloat room.hab_precio) ]
         , td [] [ text (String.fromInt room.fk_hot_codigo) ]
         , td [] [ text (String.fromInt room.hab_capacidad) ]
-        , td [] [ button [ class "button button--small button--green"] [ text "View!" ], button [ class "button button--small button--primary"] [ text "Remove!" ] ]
+        , td [] [ button [ class "button button--small button--green"] [ text "View!" ], button [ onClick (DeleteRoom room.id), class "button button--small button--primary"] [ text "Remove!" ] ]
         ]
 
 
@@ -106,18 +107,22 @@ type Status
 
 type alias Model =
     { status : Status
+    , selectedRoom : Int
     }
 
 
 initialModel : Model
 initialModel =
     { status = Loading
+    , selectedRoom = 0
     }
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg of
+        case msg of 
+        DeleteRoom roomId ->
+            ( { model |  selectedRoom = roomId }, deleteCmd roomId  )
         GotRooms (Ok rooms) ->
             case rooms of
                 first :: rest ->
@@ -142,6 +147,20 @@ initialCmd =
         { method = "GET"
         , headers = [ Http.header "Authorization" ("Bearer " ++ "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqd3QiOjZ9.eVgBafOwYssLx9tn_skX3CdE7PAVNyp0oisYibH7Xss") ]
         , url = roomsApiUrl
+        , body = Http.emptyBody
+        , expect = Http.expectJson GotRooms (list roomDecoder)
+        , timeout = Nothing
+        , tracker = Nothing
+        }
+
+{-- PATCH / DELETE COMMAND  --}
+
+deleteCmd : Int -> Cmd Msg
+deleteCmd roomId =
+    Http.request
+        { method = "PATCH"
+        , headers = [ Http.header "Authorization" ("Bearer " ++ "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqd3QiOjZ9.eVgBafOwYssLx9tn_skX3CdE7PAVNyp0oisYibH7Xss") ]
+        , url = roomsApiUrl ++ "/" ++ String.fromInt roomId
         , body = Http.emptyBody
         , expect = Http.expectJson GotRooms (list roomDecoder)
         , timeout = Nothing
