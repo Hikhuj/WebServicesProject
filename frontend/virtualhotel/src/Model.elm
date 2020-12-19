@@ -1,5 +1,6 @@
-module Model exposing (Room, Reservation, User, Hotel, Transport, TransportType)
+module Model exposing (Room, Reservation, User, Hotel, Transport, TransportType, encodeTransportType )
 import Time exposing (Posix)
+import Json.Encode as Encode
 
 
 type alias Room =
@@ -59,3 +60,14 @@ type alias TransportType =
          , id : Int
          }
 
+active : String
+active = 
+        "A"
+
+encodeTransportType : String -> Encode.Value
+encodeTransportType transportTypeDescription =
+        Encode.object [
+
+                ("tip_descripcion", Encode.string transportTypeDescription)
+                ,("tip_estado", Encode.string active)
+                ]
