@@ -27,6 +27,7 @@ import Model exposing (User)
 
 type Msg
     = GotUsers (Result Http.Error (List User))
+    | DeleteUser Int
 
 
 view : Model -> Html Msg
@@ -78,7 +79,7 @@ viewUser user =
         , td [] [ text user.usu_fec_nac ]
         , td [] [ text user.usu_telefono]
         , td [] [ text user.usu_estado ]
-        , td [] [ button [ class "button button--small button--green"] [ text "View!" ], button [ class "button button--small button--primary"] [ text "Remove!" ] ]
+        , td [] [ button [ class "button button--small button--green"] [ text "View!" ], button [ onClick (DeleteUser user.id), class "button button--small button--primary"] [ text "Remove!" ] ]
         ]
 
 
@@ -110,18 +111,24 @@ type Status
 
 type alias Model =
     { status : Status
+    , selectedUser : Maybe Int
     }
 
 
 initialModel : Model
 initialModel =
     { status = Loading
+    , selectedUser = Nothing
     }
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+
+        DeleteUser userId ->
+            ( model, deleteCmd userId  )
+
         GotUsers (Ok users) ->
             case users of
                 first :: rest ->
@@ -139,6 +146,20 @@ update msg model =
 usersApiUrl : String
 usersApiUrl = 
         C.apiUrl ++ "users"
+
+{-- PATCH / DELETE COMMAND  --}
+
+deleteCmd : Int -> Cmd Msg
+deleteCmd userId =
+    Http.request
+        { method = "PATCH"
+        , headers = [ Http.header "Authorization" ("Bearer " ++ "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqd3QiOjZ9.eVgBafOwYssLx9tn_skX3CdE7PAVNyp0oisYibH7Xss") ]
+        , url = usersApiUrl ++ "/" ++ String.fromInt userId
+        , body = Http.emptyBody
+        , expect = Http.expectJson GotUsers (list userDecoder)
+        , timeout = Nothing
+        , tracker = Nothing
+        }
 
 initialCmd : Cmd Msg
 initialCmd =

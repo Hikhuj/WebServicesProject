@@ -27,6 +27,7 @@ import Model exposing (Transport)
 
 type Msg
     = GotTransports (Result Http.Error (List Transport))
+    | DeleteTransport Int
 
 
 view : Model -> Html Msg
@@ -75,7 +76,7 @@ viewTransport transport =
         , td [] [ text transport.tra_descripcion ]
         , td [] [ text (String.fromFloat transport.tra_precio) ]
         , td [] [ text transport.tra_estado ]
-        , td [] [ button [ class "button button--small button--green"] [ text "View!" ], button [ class "button button--small button--primary"] [ text "Remove!" ] ]
+        , td [] [ button [ class "button button--small button--green"] [ text "View!" ], button [ onClick (DeleteTransport transport.id) , class "button button--small button--primary"] [ text "Remove!" ] ]
         ]
 
 
@@ -103,18 +104,24 @@ type Status
 
 type alias Model =
     { status : Status
+    , selectedRoom : Maybe Int
     }
 
 
 initialModel : Model
 initialModel =
     { status = Loading
+    , selectedRoom = Nothing
     }
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+
+        DeleteTransport transportId ->
+            ( model, deleteCmd transportId  )
+
         GotTransports (Ok transports) ->
             case transports of
                 first :: rest ->
@@ -139,6 +146,21 @@ initialCmd =
         { method = "GET"
         , headers = [ Http.header "Authorization" ("Bearer " ++ "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqd3QiOjZ9.eVgBafOwYssLx9tn_skX3CdE7PAVNyp0oisYibH7Xss") ]
         , url = transportsApiUrl
+        , body = Http.emptyBody
+        , expect = Http.expectJson GotTransports (list transportDecoder)
+        , timeout = Nothing
+        , tracker = Nothing
+        }
+
+
+{-- PATCH / DELETE COMMAND  --}
+
+deleteCmd : Int -> Cmd Msg
+deleteCmd transportId =
+    Http.request
+        { method = "PATCH"
+        , headers = [ Http.header "Authorization" ("Bearer " ++ "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqd3QiOjZ9.eVgBafOwYssLx9tn_skX3CdE7PAVNyp0oisYibH7Xss") ]
+        , url = transportsApiUrl ++ "/" ++ String.fromInt transportId
         , body = Http.emptyBody
         , expect = Http.expectJson GotTransports (list transportDecoder)
         , timeout = Nothing

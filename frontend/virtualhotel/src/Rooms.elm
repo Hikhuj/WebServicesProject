@@ -107,22 +107,24 @@ type Status
 
 type alias Model =
     { status : Status
-    , selectedRoom : Int
+    , selectedRoom : Maybe Int
     }
 
 
 initialModel : Model
 initialModel =
     { status = Loading
-    , selectedRoom = 0
+    , selectedRoom = Nothing
     }
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
         case msg of 
+
         DeleteRoom roomId ->
-            ( { model |  selectedRoom = roomId }, deleteCmd roomId  )
+            ( model, deleteCmd roomId  )
+
         GotRooms (Ok rooms) ->
             case rooms of
                 first :: rest ->
