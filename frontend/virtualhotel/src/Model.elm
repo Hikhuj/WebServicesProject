@@ -55,5 +55,6 @@ type alias Transport =
 type alias TransportType = 
         { tip_descripcion : String
          , tip_estado : String 
+         , id : Int
          }
 

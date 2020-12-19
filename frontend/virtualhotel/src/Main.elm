@@ -4,9 +4,11 @@ import Browser exposing (Document)
 import Browser.Navigation as Nav
 import Html exposing (Html, a, footer, h1, li, nav, text, ul)
 import Html.Attributes exposing (classList, href)
+import Html.Events exposing (onClick)
 import Html.Lazy exposing (lazy)
 import Reservations
 import Rooms
+import TransportTypes
 import Url exposing (Url)
 import Url.Parser as Parser exposing ((</>), Parser, s, string)
 
@@ -23,6 +25,7 @@ type Page
     | ModifyRoomPage String
     | CreateRoomPage
     | ReservationsPage Reservations.Model
+    | TransportTypesPage TransportTypes.Model
     | NotFound
 
 
@@ -31,6 +34,7 @@ type Route
     | Room
     | CreateRoom
     | Reservations
+    | TransportTypes
 
 
 parser : Parser (Route -> a) a
@@ -39,6 +43,7 @@ parser =
         [ Parser.map Reservations Parser.top
         , Parser.map Rooms (s "rooms")
         , Parser.map Reservations (s "reservations")
+        , Parser.map TransportTypes (s "transport-types")
 
         {--, Parser.map Room (s "rooms" </> Parser.string) --}
         ]
@@ -49,11 +54,15 @@ view model =
     let
         content =
 
-            case model.page of
+            case Debug.log "The Page says: " model.page of
 
                 ReservationsPage reservations ->
                     Reservations.view reservations
                         |> Html.map GotReservationsMsg
+
+                TransportTypesPage reservations ->
+                    TransportTypes.view reservations
+                        |> Html.map GotTransportTypesMsg
 
                 RoomsPage rooms ->
                     Rooms.view rooms
@@ -62,7 +71,7 @@ view model =
                 NotFound ->
                     h1 [] [ text "Not Found" ]
                 _ ->
-                    h1 [] [ text "Not Found" ]
+                    h1 [] [ text "An Unknown Error Has Occurred. Please Contact the Administrator" ]
     in
     { title = "Virtual Hotel"
     , body =
@@ -87,13 +96,14 @@ viewHeader page =
         links =
             ul []
                 [ navLink Rooms { url = "rooms", caption = "Rooms" }
-                , navLink Reservations { url = "reservations", caption = "ReservationsPage" }
+                , navLink Reservations { url = "reservations", caption = "Reservations" }
+                , navLink TransportTypes { url = "transport-types", caption = "Transport Types" }
                 ]
 
         navLink : Route -> { url : String, caption : String } -> Html msg
-        navLink route ({ url, caption } as config) =
+        navLink route { url, caption }  =
             li [ classList [ ( "tabs-item is-selected", isActive { link = route, page = page } ) ] ]
-                [ a [ href config.url ] [ text config.caption ] ]
+                [ a [ href url ] [ text caption ] ]
     in
     nav [] [ logo, links ]
 
@@ -111,6 +121,8 @@ isActive { link, page } =
             False
         ( Reservations , ReservationsPage _ ) -> True
         ( Reservations , _ ) -> False
+        ( TransportTypes , TransportTypesPage _ ) -> True
+        ( TransportTypes , _ ) -> False
         _ -> False
 -- Footer View
 
@@ -125,6 +137,7 @@ type Msg
     | ChangedUrl Url
     | GotRoomsMsg Rooms.Msg
     | GotReservationsMsg Reservations.Msg
+    | GotTransportTypesMsg TransportTypes.Msg
 
 
 
@@ -135,10 +148,32 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
 
+        ClickedLink urlRequest ->
+            case urlRequest of
+                Browser.External href ->
+                    (model, Nav.load href)
+
+                Browser.Internal url ->
+                    ( model, Nav.pushUrl model.key (Url.toString url) )
+
+        ChangedUrl url ->
+            updateUrl url model
+
         GotRoomsMsg roomsMsg ->
             case model.page of
                 RoomsPage rooms ->
                     toRooms model (Rooms.update roomsMsg rooms)
+
+                NotFound ->
+                    ( model, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        GotTransportTypesMsg transportTypesMsg ->
+            case model.page of
+                TransportTypesPage transportTypes ->
+                    toTransportTypes model (TransportTypes.update transportTypesMsg transportTypes)
 
                 NotFound ->
                     ( model, Cmd.none )
@@ -157,13 +192,6 @@ update msg model =
                 _ ->
                     ( model, Cmd.none )
 
-        ChangedUrl url ->
-            updateUrl url model
-
-        _ ->
-            ( model, Cmd.none )
-
-
 
 -- toRooms view updater
 
@@ -181,6 +209,12 @@ toReservations model ( reservations, cmd ) =
     , Cmd.map GotReservationsMsg cmd
     )
 
+
+toTransportTypes : Model -> ( TransportTypes.Model, Cmd TransportTypes.Msg ) -> ( Model, Cmd Msg )
+toTransportTypes model ( transportTypes, cmd ) =
+    ( { model | page = TransportTypesPage transportTypes }
+    , Cmd.map GotTransportTypesMsg cmd
+    )
 
 
 -- Subscriptions
@@ -214,6 +248,10 @@ updateUrl url model =
         Just Reservations ->
             Reservations.init ()
                 |> toReservations model
+
+        Just TransportTypes ->
+            TransportTypes.init ()
+                |> toTransportTypes model
 
         Nothing ->
             ( { model | page = NotFound }, Cmd.none )

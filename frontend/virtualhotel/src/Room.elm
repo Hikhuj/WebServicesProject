@@ -31,7 +31,7 @@ type Msg
 
 view : Model -> Html Msg
 view model =
-        case Debug.log "The Message" model.status of
+        case model.status of
             Loaded room ->
                 viewLoaded room
 
@@ -125,7 +125,7 @@ initialModel =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case Debug.log " The Message " msg of
+    case msg of
         GotRoom (Ok room) ->
                     ( { model | status = Loaded room }, Cmd.none )
         GotRoom (Err _) ->
