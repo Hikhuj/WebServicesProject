@@ -8,10 +8,12 @@ import Database.Persist.Postgresql
 getHotelsR :: Handler Value
 getHotelsR = do
  hotels <- runDB $ selectList [HotelHot_estado ==. "A"] [Asc HotelId]
- sendStatusJSON ok200 (object ["hotels" .= hotels])
+ sendStatusJSON ok200 hotels
 
 postHotelsR :: Handler Value
 postHotelsR = do
  newHotel <- requireCheckJsonBody :: Handler Hotel
  runDB $ insert newHotel
- sendStatusJSON created201 (object ["New Hotel" .= newHotel])
+ hotels <- runDB $ selectList [HotelHot_estado ==. "A"] [Asc HotelId]
+ sendStatusJSON created201 hotels
+

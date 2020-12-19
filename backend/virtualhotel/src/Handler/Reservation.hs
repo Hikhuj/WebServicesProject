@@ -11,7 +11,7 @@ getReservationR reservationId = do
  mReservation <- runDB $ selectFirst [ReservacionRes_estado ==. "A", ReservacionId ==. reservationId ] []
  case mReservation of
   Just mReservation -> 
-   return $ object ["reservation" .= mReservation]
+   returnJson mReservation
   _ ->
    notFound
 
@@ -24,7 +24,8 @@ patchReservationR reservationId = do
    runDB $ update reservationId [ReservacionRes_estado =. "E"]
   _ -> 
    notFound
- return $ object ["message" .= String "Deleted"]
+ reservations <- runDB $ selectList [ReservacionRes_estado ==. "A"] []
+ sendStatusJSON ok200 reservations
 
 -- UPDATE / REPLAC
 putReservationR :: ReservacionId -> Handler Value

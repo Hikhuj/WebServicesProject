@@ -10,7 +10,7 @@ getHotelR hotelId = do
  mHotel <- runDB $ selectFirst [HotelHot_estado ==. "A", HotelId ==. hotelId ] []
  case mHotel of
   Just mHotel -> 
-   return $ object ["hotel" .= mHotel]
+   returnJson mHotel
   _ ->
    notFound
 
@@ -23,12 +23,13 @@ patchHotelR hotelId = do
    runDB $ update hotelId [HotelHot_estado =. "E"]
   _ -> 
    notFound
- return $ object ["message" .= String "Deleted"]
+ hotels <- runDB $ selectList [HotelHot_estado ==. "A"] []
+ sendStatusJSON ok200 hotels
 
 putHotelR :: HotelId -> Handler Value
 putHotelR hotelId = do
  _ <- runDB $ get404 hotelId
  newHotel <- requireCheckJsonBody :: Handler Hotel
  runDB $ replace hotelId newHotel 
- return $ object ["hotel" .= newHotel]
+ returnJson newHotel
 

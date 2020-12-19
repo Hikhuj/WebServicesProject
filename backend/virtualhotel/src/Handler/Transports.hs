@@ -8,11 +8,12 @@ import Database.Persist.Postgresql
 getTransportsR :: Handler Value
 getTransportsR = do
  transports <- runDB $ selectList [TransporteTra_estado ==. "A"] [Asc TransporteId]
- sendStatusJSON ok200 (object ["transports" .= transports])
+ sendStatusJSON ok200 transports
 
 postTransportsR :: Handler Value
 postTransportsR = do
  newTransport <- requireCheckJsonBody :: Handler Transporte
  _ <- runDB $ insert newTransport
- sendStatusJSON created201 (object ["New Transport" .= newTransport])
+ transports <- runDB $ selectList [TransporteTra_estado ==. "A"] [Asc TransporteId]
+ sendStatusJSON created201 transports
 
