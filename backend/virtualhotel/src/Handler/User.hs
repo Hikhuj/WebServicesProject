@@ -23,7 +23,8 @@ patchUserR userId = do
    runDB $ update userId [UsuarioUsu_estado =. "E"]
   _ -> 
    notFound
- sendStatusJSON ok200 $ object ["message" .= String "Deleted"]
+ users <- runDB $ selectList [UsuarioUsu_estado ==. "A"] []
+ sendStatusJSON ok200 users
 
 putUserR :: UsuarioId -> Handler Value
 putUserR userId = do

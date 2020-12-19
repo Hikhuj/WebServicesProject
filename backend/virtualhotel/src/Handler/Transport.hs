@@ -24,7 +24,8 @@ patchTransportR transportId = do
    runDB $ update transportId [TransporteTra_estado =. "E"]
   _ -> 
    notFound
- return $ object ["message" .= String "Deleted"]
+ transports <- runDB $ selectList [TransporteTra_estado ==. "A"] []
+ sendStatusJSON ok200 transports
 
 putTransportR :: TransporteId -> Handler Value
 putTransportR transportId = do

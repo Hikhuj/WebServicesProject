@@ -23,7 +23,8 @@ patchHotelR hotelId = do
    runDB $ update hotelId [HotelHot_estado =. "E"]
   _ -> 
    notFound
- return $ object ["message" .= String "Deleted"]
+ hotels <- runDB $ selectList [HotelHot_estado ==. "A"] []
+ sendStatusJSON ok200 hotels
 
 putHotelR :: HotelId -> Handler Value
 putHotelR hotelId = do
